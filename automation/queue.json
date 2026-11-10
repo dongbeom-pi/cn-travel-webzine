@@ -1,3 +1,7 @@
 {
-  "commands": []
+  "commands": [
+    { "id": "test-20261110-01", "action": "saveIssue",
+      "args": { "isNew": true, "issue": { "호수": 99, "주차표기": "연결 테스트", "커버제목": "자동화 연결 테스트 (곧 지워져요)" } } },
+    { "id": "test-20261110-02", "action": "deleteIssue", "args": { "no": 99 } }
+  ]
 }

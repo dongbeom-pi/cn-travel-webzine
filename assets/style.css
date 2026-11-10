@@ -61,8 +61,9 @@ button{font-family:inherit}
 .header__inner{height:68px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
 .brand img{width:48px;height:27px;object-fit:contain}
-.brand span{font-size:17px;font-weight:700;letter-spacing:-.3px}
-.brand small{font-size:14px;font-weight:600;color:var(--g600);margin-left:2px}
+.brand__text{display:flex;flex-direction:column;gap:1px}
+.brand__name{font-size:17px;line-height:22px;font-weight:800;letter-spacing:-.4px}
+.brand__sub{font-size:12px;line-height:15px;font-weight:800;letter-spacing:2px;color:var(--blue)}
 
 /* ===== 웹진 ===== */
 .cover{padding:72px 0 96px}
@@ -242,7 +243,8 @@ button{font-family:inherit}
   body{font-size:16px;line-height:26px}
   .header__inner{height:56px}
   .brand img{width:40px;height:23px}
-  .brand span{font-size:16px}
+  .brand__name{font-size:16px;line-height:20px}
+  .brand__sub{font-size:11px;line-height:14px;letter-spacing:1.5px}
   .t-hero{font-size:28px;line-height:38px;letter-spacing:-.9px}
   .t-title{font-size:22px;line-height:31px;letter-spacing:-.6px}
   .t-card{font-size:19px;line-height:28px}
