@@ -179,7 +179,7 @@
       renderProducts(issue, products);
       if (products.length) $("toProducts").hidden = false;
       renderTips(issue, d[2].filter(sameIssue(no)).sort(byOrder));
-      renderNews(d[3].filter(sameIssue(no)));
+      renderNews(d[3].filter(sameIssue(no)).sort(byOrder));
       renderArchive(issues, no);
     })
     .catch(function () {

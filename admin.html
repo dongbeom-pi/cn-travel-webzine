@@ -7,16 +7,16 @@
 <meta name="robots" content="noindex">
 <link rel="icon" href="images/cn-symbol.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="assets/style.css?v=20261110b">
+<link rel="stylesheet" href="assets/style.css?v=20261110c">
 </head>
 <body class="form-page">
 <div class="page">
   <header class="header">
     <div class="wrap header__inner">
-      <a class="brand" href="./"><img src="images/cn-symbol.png" alt="CN" width="48" height="27"><span>트래블 매거진</span><small>관리자</small></a>
+      <a class="brand" href="./"><img src="images/cn-symbol.png" alt="CN" width="48" height="27"><span>트래블 매거진</span><small class="hide-sm">관리자</small></a>
       <div style="display:flex;gap:8px">
-        <a class="btn btn--gray btn--sm" href="./?preview=1" target="_blank" rel="noopener">미리보기</a>
-        <button class="btn btn--gray btn--sm" type="button" id="logoutBtn" hidden>로그아웃</button>
+        <a class="btn btn--gray btn--sm" id="previewTop" href="./?preview=1" target="_blank" rel="noopener">미리보기</a>
+        <button class="btn btn--gray btn--sm hide-sm" type="button" id="logoutBtn" hidden>로그아웃</button>
       </div>
     </div>
   </header>
@@ -25,8 +25,8 @@
     <!-- 로그인 -->
     <form class="login" id="loginForm" novalidate>
       <h1 class="step__title" style="margin-top:0">관리자 로그인</h1>
-      <p class="step__desc">접수된 상품을 확인하고 웹진에 실을 수 있어요.</p>
-      <div class="notice notice--warn" id="noApi" hidden style="margin-bottom:24px">아직 서버가 연결되지 않았어요. 설치 안내(README)의 Apps Script 배포를 먼저 해주세요.</div>
+      <p class="step__desc">웹진의 모든 내용을 여기서 고칠 수 있어요.</p>
+      <div class="notice notice--warn" id="noApi" hidden style="margin-bottom:24px">아직 서버가 연결되지 않았어요.</div>
       <div class="field">
         <label class="field__label" for="loginId">아이디</label>
         <input class="input" id="loginId" autocomplete="username" autocapitalize="characters" required>
@@ -40,35 +40,156 @@
     </form>
 
     <!-- 관리 화면 -->
-    <div class="wrap" id="adminView" hidden style="padding-bottom:96px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-top:40px">
+    <div class="wrap" id="adminView" hidden style="padding-bottom:120px">
+      <div class="adm-head">
         <div>
-          <h1 class="t-title">이번 주 웹진 만들기</h1>
+          <h1 class="t-title">웹진 관리</h1>
           <p class="section__desc t-body" id="summaryText"></p>
         </div>
-        <a class="btn btn--soft btn--sm" id="sheetLink" target="_blank" rel="noopener">팁 · 소식은 시트에서 고치기</a>
       </div>
 
       <div class="tabs" role="tablist">
-        <button class="tab" role="tab" id="tab-wait" aria-controls="pane-wait" aria-selected="true">새로 들어온 상품<b id="cntWait">0</b></button>
+        <button class="tab" role="tab" id="tab-edit" aria-controls="pane-edit" aria-selected="true">호 편집</button>
+        <button class="tab" role="tab" id="tab-wait" aria-controls="pane-wait" aria-selected="false">새로 들어온 상품<b id="cntWait">0</b></button>
         <button class="tab" role="tab" id="tab-done" aria-controls="pane-done" aria-selected="false">처리한 상품</button>
-        <button class="tab" role="tab" id="tab-issue" aria-controls="pane-issue" aria-selected="false">호수 관리</button>
       </div>
 
-      <section role="tabpanel" id="pane-wait" aria-labelledby="tab-wait"><div class="adm-list" id="listWait"></div></section>
-      <section role="tabpanel" id="pane-done" aria-labelledby="tab-done" hidden><div class="adm-list" id="listDone"></div></section>
-      <section role="tabpanel" id="pane-issue" aria-labelledby="tab-issue" hidden>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-          <p class="t-small c-sub" style="margin:0">공개로 바꾸면 웹진 첫 화면이 그 호로 바뀌어요.</p>
-          <button class="btn btn--primary btn--sm" type="button" id="newIssueBtn">새 호 만들기</button>
+      <!-- 호 편집 -->
+      <section role="tabpanel" id="pane-edit" aria-labelledby="tab-edit">
+        <div class="issue-pick" id="issuePick"></div>
+
+        <div id="editor" hidden>
+          <article class="adm-item adm-item--issue">
+            <div class="adm-item__thumb" id="edCoverThumb"></div>
+            <div class="adm-item__meta">
+              <div class="chips" id="edCoverChips"></div>
+              <span class="t-card" id="edCoverTitle"></span>
+              <span class="t-small c-sub" id="edCoverText"></span>
+            </div>
+            <div class="adm-item__actions">
+              <button class="btn btn--sm btn--gray" type="button" id="edCoverBtn">커버 고치기</button>
+              <a class="btn btn--sm btn--gray" id="edPreview" target="_blank" rel="noopener">미리보기</a>
+              <button class="btn btn--sm btn--primary" type="button" id="edPublish">공개하기</button>
+            </div>
+          </article>
+
+          <div class="ed-sec">
+            <div class="ed-sec__head"><h2 class="ed-sec__title">상품 <span id="cntProducts">0</span></h2><button class="btn btn--sm btn--soft" type="button" id="addProduct">상품 추가</button></div>
+            <div class="adm-list" id="edProducts"></div>
+          </div>
+
+          <div class="ed-sec">
+            <div class="ed-sec__head"><h2 class="ed-sec__title">여행 팁 <span id="cntTips">0</span></h2><button class="btn btn--sm btn--soft" type="button" id="addTip">팁 추가</button></div>
+            <div class="adm-list" id="edTips"></div>
+          </div>
+
+          <div class="ed-sec">
+            <div class="ed-sec__head"><h2 class="ed-sec__title">씨앤 소식 <span id="cntNews">0</span></h2><button class="btn btn--sm btn--soft" type="button" id="addNews">소식 추가</button></div>
+            <div class="adm-list" id="edNews"></div>
+          </div>
+
+          <div class="ed-danger">
+            <button class="btn btn--sm btn--danger" type="button" id="edDelete">이 호 삭제</button>
+          </div>
         </div>
-        <div class="adm-list" id="listIssue"></div>
+        <div class="adm-empty" id="editorEmpty" hidden>아직 만든 호가 없어요. 위의 "새 호"를 눌러 시작해 주세요.</div>
       </section>
+
+      <section role="tabpanel" id="pane-wait" aria-labelledby="tab-wait" hidden><div class="adm-list" id="listWait"></div></section>
+      <section role="tabpanel" id="pane-done" aria-labelledby="tab-done" hidden><div class="adm-list" id="listDone"></div></section>
+
+      <div class="adm-foot">
+        <button class="btn btn--sm btn--gray" type="button" id="runQueue">자동화 지시 지금 실행</button>
+        <a class="btn btn--sm btn--gray" id="sheetLink" target="_blank" rel="noopener">원본 시트 열기</a>
+        <button class="btn btn--sm btn--gray show-sm" type="button" id="logoutBtn2">로그아웃</button>
+      </div>
     </div>
   </main>
 </div>
 
-<!-- 상품 미리보기 -->
+<!-- 상품 편집 -->
+<dialog class="modal modal--form" id="productModal" aria-labelledby="pTitle">
+  <span class="modal__handle" aria-hidden="true"></span>
+  <form class="modal__scroll" id="productForm" novalidate>
+    <h3 class="modal__title" id="pTitle" style="margin-top:8px">상품 추가</h3>
+    <div class="adm-form" style="margin-top:24px">
+      <div class="field"><label class="field__label" for="pIssue">실을 호</label><select class="select" id="pIssue"></select></div>
+      <div class="field"><label class="field__label" for="pCat">카테고리</label><input class="input" id="pCat" list="catList" maxlength="16" placeholder="예) 해외 여행"></div>
+      <div class="field span2"><div class="field__row"><label class="field__label" for="pName">상품명<em>필수</em></label><span class="field__count" data-count="pName" data-max="24"></span></div><input class="input" id="pName" required></div>
+      <div class="field span2"><div class="field__row"><label class="field__label" for="pSummary">한 줄 설명</label><span class="field__count" data-count="pSummary" data-max="30"></span></div><input class="input" id="pSummary"></div>
+      <div class="field"><label class="field__label" for="pPrice">가격 (숫자만)</label><input class="input" id="pPrice" inputmode="numeric" placeholder="비우면 '가격은 문의해 주세요'"></div>
+      <div class="field"><label class="field__label" for="pDeadline">신청 마감일</label><input class="input" id="pDeadline" type="date"></div>
+      <div class="field span2"><label class="field__label" for="pDetail">자세한 설명</label><textarea class="textarea" id="pDetail" style="min-height:140px"></textarea></div>
+      <div class="field span2">
+        <span class="field__label" id="pPhotoLabel">대표 사진</span>
+        <div class="thumbs" id="pPhotoThumb"></div>
+        <label class="upload" id="pPhotoDrop" style="min-height:110px"><input type="file" id="pPhoto" accept="image/*" aria-labelledby="pPhotoLabel"><strong>사진 선택하기</strong><span>가로 사진 1장</span></label>
+        <input class="input" id="pPhotoUrl" placeholder="또는 사진 주소(https://…) 붙여넣기">
+      </div>
+      <div class="field span2">
+        <span class="field__label" id="pAttachLabel">안내 이미지</span>
+        <div class="thumbs" id="pAttachThumbs"></div>
+        <label class="upload" id="pAttachDrop" style="min-height:90px"><input type="file" id="pAttach" accept="image/*" multiple aria-labelledby="pAttachLabel"><strong>이미지 추가하기</strong><span>전단지·안내문, 여러 장 가능</span></label>
+      </div>
+      <div class="field span2"><label class="field__label" for="pLink">예약 · 문의 받을 곳</label><input class="input" id="pLink" placeholder="이메일 주소나 https:// 링크"></div>
+    </div>
+    <datalist id="catList"><option value="국내 여행"><option value="해외 여행"><option value="호텔 · 숙박"><option value="항공"><option value="MICE · 전시"><option value="기업 출장"></datalist>
+    <p class="notice notice--error" id="pError" role="alert" hidden style="margin-top:20px"></p>
+  </form>
+  <div class="modal__actions">
+    <button class="btn btn--gray" type="button" data-close>취소</button>
+    <button class="btn btn--primary" type="button" id="pSubmit">저장하기</button>
+  </div>
+</dialog>
+
+<!-- 팁 · 소식 편집 -->
+<dialog class="modal modal--form" id="textModal" aria-labelledby="tTitle">
+  <span class="modal__handle" aria-hidden="true"></span>
+  <form class="modal__scroll" id="textForm" novalidate>
+    <h3 class="modal__title" id="tTitle" style="margin-top:8px">팁 추가</h3>
+    <div style="margin-top:24px">
+      <div class="field" id="tTitleField"><label class="field__label" for="tHead" id="tHeadLabel">제목</label><input class="input" id="tHead"></div>
+      <div class="field"><label class="field__label" for="tBody" id="tBodyLabel">내용</label><textarea class="textarea" id="tBody" style="min-height:120px"></textarea></div>
+      <div class="field" id="tLinkField"><label class="field__label" for="tLink">링크</label><input class="input" id="tLink" placeholder="https://… (선택)"></div>
+    </div>
+    <p class="notice notice--error" id="tError" role="alert" hidden style="margin-top:20px"></p>
+  </form>
+  <div class="modal__actions">
+    <button class="btn btn--gray" type="button" data-close>취소</button>
+    <button class="btn btn--primary" type="button" id="tSubmit">저장하기</button>
+  </div>
+</dialog>
+
+<!-- 호 만들기 · 커버 고치기 -->
+<dialog class="modal modal--form" id="issueModal" aria-labelledby="iTitle">
+  <span class="modal__handle" aria-hidden="true"></span>
+  <form class="modal__scroll" id="issueForm" novalidate>
+    <h3 class="modal__title" id="iTitle" style="margin-top:8px">새 호 만들기</h3>
+    <div class="adm-form" style="margin-top:24px">
+      <div class="field"><label class="field__label" for="iNo">호수</label><input class="input" id="iNo" type="number" min="1" inputmode="numeric" required></div>
+      <div class="field"><label class="field__label" for="iDate">발행일</label><input class="input" id="iDate" type="date"></div>
+      <div class="field span2"><label class="field__label" for="iWeek">주차 표기</label><input class="input" id="iWeek" placeholder="예) 11월 3주차"></div>
+      <div class="field span2"><label class="field__label" for="iTitleIn">커버 제목<em>필수</em></label><input class="input" id="iTitleIn" placeholder="예) 이번 겨울엔 오사카로 떠나볼까요?" required></div>
+      <div class="field span2"><label class="field__label" for="iText">커버 소개</label><textarea class="textarea" id="iText" style="min-height:110px" placeholder="2~3줄, 해요체로 써주세요"></textarea></div>
+      <div class="field span2">
+        <span class="field__label" id="iPhotoLabel">커버 사진</span>
+        <div class="thumbs" id="iThumb"></div>
+        <label class="upload" id="iDrop" style="min-height:110px"><input type="file" id="iPhoto" accept="image/*" aria-labelledby="iPhotoLabel"><strong>사진 선택하기</strong><span>가로 사진 · 4:3 비율로 보여요</span></label>
+        <input class="input" id="iPhotoUrl" placeholder="또는 사진 주소(https://…) 붙여넣기">
+      </div>
+      <div class="field span2"><label class="field__label" for="iLink">커버 버튼 링크</label><input class="input" id="iLink" placeholder="https://… (없으면 버튼이 안 보여요)"></div>
+      <div class="field"><label class="field__label" for="iProdTitle">상품 섹션 제목</label><input class="input" id="iProdTitle" placeholder="지금 떠나기 좋은 여행이에요"></div>
+      <div class="field"><label class="field__label" for="iTipTitle">팁 섹션 제목</label><input class="input" id="iTipTitle" placeholder="떠나기 전에 이것만 챙기세요"></div>
+    </div>
+    <p class="notice notice--error" id="iError" role="alert" hidden style="margin-top:20px"></p>
+  </form>
+  <div class="modal__actions">
+    <button class="btn btn--gray" type="button" data-close>취소</button>
+    <button class="btn btn--primary" type="button" id="iSubmit">저장하기</button>
+  </div>
+</dialog>
+
+<!-- 접수 상품 자세히 -->
 <dialog class="modal" id="viewModal" aria-labelledby="vTitle">
   <span class="modal__handle" aria-hidden="true"></span>
   <div class="modal__scroll">
@@ -86,21 +207,17 @@
 
 <!-- 승인 -->
 <dialog class="modal" id="approveModal" aria-labelledby="aTitle">
-  <form class="modal__scroll" id="approveForm" method="dialog" novalidate>
+  <span class="modal__handle" aria-hidden="true"></span>
+  <div class="modal__scroll">
     <h3 class="modal__title" id="aTitle" style="margin-top:8px">몇 호에 실을까요?</h3>
     <p class="modal__summary t-body" id="aProduct"></p>
     <div class="field" style="margin-top:24px">
       <label class="field__label" for="aIssue">호수</label>
       <select class="select" id="aIssue"></select>
-      <span class="field__hint">원하는 호가 없으면 "호수 관리"에서 먼저 만들어 주세요.</span>
-    </div>
-    <div class="field">
-      <label class="field__label" for="aOrder">순서</label>
-      <input class="input" id="aOrder" type="number" min="1" inputmode="numeric">
-      <span class="field__hint">작은 숫자가 웹진에서 먼저 나와요.</span>
+      <span class="field__hint">원하는 호가 없으면 "호 편집"에서 먼저 만들어 주세요. 싣고 나서 순서와 내용은 호 편집에서 고칠 수 있어요.</span>
     </div>
     <p class="notice notice--error" id="aError" role="alert" hidden style="margin-top:20px"></p>
-  </form>
+  </div>
   <div class="modal__actions">
     <button class="btn btn--gray" type="button" data-close>취소</button>
     <button class="btn btn--primary" type="button" id="aSubmit">웹진에 싣기</button>
@@ -109,13 +226,14 @@
 
 <!-- 반려 -->
 <dialog class="modal" id="rejectModal" aria-labelledby="rTitle">
+  <span class="modal__handle" aria-hidden="true"></span>
   <div class="modal__scroll">
     <h3 class="modal__title" id="rTitle" style="margin-top:8px">이번에는 싣지 않을까요?</h3>
     <p class="modal__summary t-body" id="rProduct"></p>
     <div class="field" style="margin-top:24px">
       <label class="field__label" for="rMemo">사유 메모</label>
       <textarea class="textarea" id="rMemo" placeholder="예) 사진 교체 후 다시 올려주세요" style="min-height:120px"></textarea>
-      <span class="field__hint">메모는 관리자 화면에만 남아요. 담당자에게는 따로 알려주세요.</span>
+      <span class="field__hint">메모는 관리자 화면에만 남아요.</span>
     </div>
   </div>
   <div class="modal__actions">
@@ -124,39 +242,10 @@
   </div>
 </dialog>
 
-<!-- 호수 만들기 · 고치기 -->
-<dialog class="modal" id="issueModal" aria-labelledby="iTitle" style="width:min(760px,calc(100% - 32px))">
-  <span class="modal__handle" aria-hidden="true"></span>
-  <form class="modal__scroll" id="issueForm" novalidate>
-    <h3 class="modal__title" id="iTitle" style="margin-top:8px">새 호 만들기</h3>
-    <div class="adm-form" style="margin-top:24px">
-      <div class="field"><label class="field__label" for="iNo">호수</label><input class="input" id="iNo" type="number" min="1" inputmode="numeric" required></div>
-      <div class="field"><label class="field__label" for="iDate">발행일</label><input class="input" id="iDate" type="date"></div>
-      <div class="field span2"><label class="field__label" for="iWeek">주차 표기</label><input class="input" id="iWeek" placeholder="예) 11월 3주차"></div>
-      <div class="field span2"><label class="field__label" for="iTitleIn">커버 제목</label><input class="input" id="iTitleIn" placeholder="예) 이번 겨울엔 오사카로 떠나볼까요?" required></div>
-      <div class="field span2"><label class="field__label" for="iText">커버 소개</label><textarea class="textarea" id="iText" style="min-height:110px" placeholder="2~3줄, 해요체로 써주세요"></textarea></div>
-      <div class="field span2">
-        <span class="field__label" id="iPhotoLabel">커버 사진</span>
-        <label class="upload" id="iDrop" style="min-height:120px"><input type="file" id="iPhoto" accept="image/*" aria-labelledby="iPhotoLabel"><strong>사진 선택하기</strong><span>가로 사진 · 4:3 비율로 보여요</span></label>
-        <div class="thumbs" id="iThumb"></div>
-        <input class="input" id="iPhotoUrl" placeholder="또는 사진 주소(https://…)를 붙여넣기">
-      </div>
-      <div class="field span2"><label class="field__label" for="iLink">커버 버튼 링크</label><input class="input" id="iLink" placeholder="https://… (없으면 버튼이 안 보여요)"></div>
-      <div class="field"><label class="field__label" for="iProdTitle">상품 섹션 제목</label><input class="input" id="iProdTitle" placeholder="지금 떠나기 좋은 여행이에요"></div>
-      <div class="field"><label class="field__label" for="iTipTitle">팁 섹션 제목</label><input class="input" id="iTipTitle" placeholder="떠나기 전에 이것만 챙기세요"></div>
-    </div>
-    <p class="notice notice--error" id="iError" role="alert" hidden style="margin-top:20px"></p>
-  </form>
-  <div class="modal__actions">
-    <button class="btn btn--gray" type="button" data-close>취소</button>
-    <button class="btn btn--primary" type="button" id="iSubmit">저장하기</button>
-  </div>
-</dialog>
-
 <div class="toast" id="toast" role="status" hidden></div>
 
-<script src="config.js?v=20261110b"></script>
-<script src="assets/common.js?v=20261110b"></script>
-<script src="assets/admin.js?v=20261110b"></script>
+<script src="config.js?v=20261110c"></script>
+<script src="assets/common.js?v=20261110c"></script>
+<script src="assets/admin.js?v=20261110c"></script>
 </body>
 </html>
