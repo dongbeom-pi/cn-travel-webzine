@@ -2,120 +2,128 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>씨앤 트래블 매거진</title>
-<meta name="description" content="씨앤이 매주 소개하는 여행지와 여행 상품">
+<meta name="description" content="씨앤이 매주 고른 여행지와 여행 상품을 소개해요">
 <meta property="og:title" content="씨앤 트래블 매거진">
-<meta property="og:description" content="씨앤이 매주 소개하는 여행지와 여행 상품">
+<meta property="og:description" content="씨앤이 매주 고른 여행지와 여행 상품을 소개해요">
+<meta name="theme-color" content="#FFFFFF">
 <link rel="icon" href="images/cn-symbol.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
+<div class="page">
 
-<header class="topbar">
-  <div class="container topbar__inner">
-    <a class="brand" href="./">
-      <img src="images/cn-symbol.png" alt="CN" width="56" height="32">
-      <span class="brand__text">
-        <span class="brand__name" data-cfg="title">씨앤 트래블 매거진</span>
-        <span class="label label--sub" data-cfg="subtitle">CN TRAVEL MAGAZINE</span>
-      </span>
-    </a>
-    <button class="btn btn--ghost btn--sm" type="button" id="openArchive">지난 호 보기</button>
-  </div>
-</header>
+  <header class="header">
+    <div class="wrap header__inner">
+      <a class="brand" href="./">
+        <img src="images/cn-symbol.png" alt="CN" width="48" height="27">
+        <span data-cfg="title">씨앤 트래블 매거진</span>
+      </a>
+      <a class="btn btn--gray btn--sm" href="#archive" id="toArchive">지난 호 보기</a>
+    </div>
+  </header>
 
-<div class="strip">
-  <div class="container strip__inner">
-    <span class="label label--light" id="issueWeek">WEEKLY</span>
-    <span class="label label--sky" id="issueNo"></span>
-  </div>
+  <main>
+    <div class="wrap state" id="state">
+      <strong>잠시만 기다려 주세요</strong>
+      <span>이번 호를 불러오고 있어요</span>
+    </div>
+
+    <!-- 커버 -->
+    <section class="cover" id="cover" hidden>
+      <div class="wrap cover__inner">
+        <div class="cover__text">
+          <span class="eyebrow" id="issueLabel"></span>
+          <h1 class="t-hero" id="coverTitle"></h1>
+          <p class="t-body" id="coverText"></p>
+        </div>
+        <div class="cover__media" id="coverMedia"></div>
+        <div class="cover__btns" id="coverBtns">
+          <a class="btn btn--primary" id="coverLink" target="_blank" rel="noopener" hidden>여행지 자세히 보기</a>
+          <a class="btn btn--soft" href="#products" id="toProducts" hidden>상품 보러 가기</a>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider" id="d1" hidden></div>
+
+    <!-- 상품 -->
+    <section class="section" id="products" hidden>
+      <div class="wrap">
+        <h2 class="t-title" id="productsTitle">지금 떠나기 좋은 여행이에요</h2>
+        <p class="section__desc t-body">카드를 누르면 자세한 내용을 볼 수 있어요</p>
+        <div class="cards" id="productGrid"></div>
+      </div>
+    </section>
+
+    <div class="divider" id="d2" hidden></div>
+
+    <!-- 여행 팁 -->
+    <section class="section" id="tips" hidden>
+      <div class="wrap">
+        <div class="tipbox">
+          <h2 class="t-title" id="tipsTitle">떠나기 전에 이것만 챙기세요</h2>
+          <ol class="tips" id="tipList"></ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- 소식 -->
+    <section class="section" id="news" hidden>
+      <div class="wrap" id="newsList"></div>
+    </section>
+
+    <div class="divider" id="d3" hidden></div>
+
+    <!-- 지난 호 -->
+    <section class="section" id="archive" hidden>
+      <div class="wrap">
+        <h2 class="t-title">지난 호도 읽어보세요</h2>
+        <div class="archive" id="archiveList"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer__inner">
+      <div>
+        <p class="t-small" style="font-weight:700;color:var(--g700)">주식회사 씨앤 · 트래블 매거진</p>
+        <p class="t-cap c-sub" style="margin-top:6px">문의 <span data-cfg="contact"></span></p>
+      </div>
+      <div style="display:flex;gap:16px;align-items:center">
+        <a href="submit.html">상품 올리기</a>
+        <a href="admin.html">관리자</a>
+      </div>
+    </div>
+  </footer>
 </div>
 
-<main id="app">
-  <div class="container state" id="state">불러오는 중입니다…</div>
-
-  <!-- 커버 -->
-  <section class="cover" id="cover" hidden>
-    <div class="container cover__inner">
-      <div class="cover__media" id="coverMedia"></div>
-      <div class="cover__body">
-        <span class="label">이번 주 여행지</span>
-        <h1 class="t-display" id="coverTitle"></h1>
-        <p class="t-body t-sub" id="coverText"></p>
-        <a class="btn btn--primary" id="coverLink" target="_blank" rel="noopener" hidden>자세히 보기 →</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- 상품 -->
-  <section class="section section--surface" id="products" hidden>
-    <div class="container">
-      <span class="label">이번 주 상품</span>
-      <h2 class="t-title" id="productsTitle">지금 떠나기 좋은 여행</h2>
-      <div class="grid" id="productGrid"></div>
-    </div>
-  </section>
-
-  <!-- 여행 팁 -->
-  <section class="section" id="tips" hidden>
-    <div class="container container--narrow">
-      <span class="label">여행 팁</span>
-      <h2 class="t-title" id="tipsTitle">떠나기 전에 알아두세요</h2>
-      <ol class="tips" id="tipList"></ol>
-    </div>
-  </section>
-
-  <!-- 소식 -->
-  <section class="section section--tight" id="news" hidden>
-    <div class="container container--narrow">
-      <div class="news">
-        <span class="label">씨앤 소식</span>
-        <div id="newsList"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 지난 호 -->
-  <section class="section section--surface" id="archive" hidden>
-    <div class="container">
-      <span class="label">ARCHIVE</span>
-      <h2 class="t-title">지난 호</h2>
-      <ul class="archive" id="archiveList"></ul>
-    </div>
-  </section>
-</main>
-
-<footer class="footer">
-  <div class="container">
-    <p class="footer__name">주식회사 씨앤 · 트래블 매거진</p>
-    <p class="t-caption footer__muted">문의: <span data-cfg="contact"></span></p>
-  </div>
-</footer>
-
-<!-- 상품 상세 팝업 -->
+<!-- 상품 상세 (PC: 가운데 팝업 · 모바일: 바텀시트) -->
 <dialog class="modal" id="productModal" aria-labelledby="modalTitle">
-  <div class="modal__media" id="modalMedia"></div>
-  <div class="modal__body">
-    <span class="label" id="modalCategory"></span>
-    <h3 class="t-title" id="modalTitle"></h3>
-    <p class="t-caption t-sub" id="modalSummary"></p>
-    <p class="t-subtitle modal__price" id="modalPrice"></p>
-    <p class="t-body modal__detail" id="modalDetail"></p>
-    <div class="modal__actions">
-      <a class="btn btn--primary" id="modalLink" target="_blank" rel="noopener">예약 · 문의하기 →</a>
-      <button class="btn btn--ghost" type="button" data-close>닫기</button>
+  <span class="modal__handle" aria-hidden="true"></span>
+  <div class="modal__scroll">
+    <div class="modal__media" id="modalMedia"></div>
+    <div class="modal__chips" id="modalChips"></div>
+    <h3 class="modal__title" id="modalTitle"></h3>
+    <p class="modal__summary t-body" id="modalSummary"></p>
+    <p class="modal__price" id="modalPrice"></p>
+    <dl class="infobox" id="modalInfo" hidden></dl>
+    <p class="modal__detail t-body" id="modalDetail"></p>
+    <div class="attach" id="modalAttach" hidden>
+      <button class="btn btn--soft btn--block attach__toggle" type="button" id="attachToggle" aria-expanded="false">안내 이미지 보기</button>
+      <div class="attach__list" id="attachList" hidden></div>
     </div>
   </div>
-  <button class="modal__x" type="button" data-close aria-label="닫기">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-  </button>
+  <div class="modal__actions">
+    <button class="btn btn--gray" type="button" data-close>닫기</button>
+    <a class="btn btn--primary" id="modalLink" target="_blank" rel="noopener">예약 · 문의하기</a>
+  </div>
 </dialog>
 
 <script src="config.js"></script>
+<script src="assets/common.js"></script>
 <script src="assets/app.js"></script>
 </body>
 </html>
