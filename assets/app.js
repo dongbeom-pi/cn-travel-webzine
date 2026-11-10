@@ -133,7 +133,15 @@
     var box = $("attachList"); box.textContent = ""; box.hidden = true;
     $("attachToggle").setAttribute("aria-expanded", "false");
     $("attachToggle").textContent = "안내 이미지 보기";
-    files.forEach(function (f) { var i = el("img"); i.src = W.imgSrc(f); i.alt = p["상품명"] + " 안내 이미지"; i.loading = "lazy"; box.appendChild(i); });
+    var srcs = files.map(function (f) { return W.imgSrc(f); });
+    srcs.forEach(function (src, k) {
+      var b = el("button"); b.type = "button";
+      b.setAttribute("aria-label", "안내 이미지 " + (k + 1) + " 크게 보기");
+      var i = el("img"); i.src = src; i.alt = p["상품명"] + " 안내 이미지"; i.loading = "lazy";
+      b.appendChild(i);
+      b.addEventListener("click", function () { openViewer(srcs, k, b); });
+      box.appendChild(b);
+    });
     $("modalAttach").hidden = !files.length;
 
     var u = W.safeUrl(p["링크"]);
@@ -152,6 +160,46 @@
     this.textContent = open ? "안내 이미지 접기" : "안내 이미지 보기";
   });
   function closeModal() { if (modal.close) modal.close(); else modal.removeAttribute("open"); }
+
+  // ---------- 안내 이미지 확대 ----------
+  var viewer = $("viewer"), vList = [], vIdx = 0, vFrom = null;
+  function showViewer() {
+    viewer.classList.remove("is-zoom");
+    $("viewerImg").src = vList[vIdx];
+    $("viewerCount").textContent = vList.length > 1 ? (vIdx + 1) + " / " + vList.length : "";
+    $("viewerPrev").hidden = vList.length < 2 || vIdx === 0;
+    $("viewerNext").hidden = vList.length < 2 || vIdx === vList.length - 1;
+    $("viewerHint").textContent = "사진을 누르면 더 크게 볼 수 있어요";
+    $("viewerStage").scrollTop = 0; $("viewerStage").scrollLeft = 0;
+  }
+  function openViewer(list, i, from) {
+    vList = list; vIdx = i; vFrom = from; showViewer();
+    if (viewer.showModal) viewer.showModal(); else viewer.setAttribute("open", "");
+  }
+  function closeViewer() { if (viewer.close) viewer.close(); else viewer.removeAttribute("open"); }
+  $("viewerImg").addEventListener("click", function () {
+    var z = viewer.classList.toggle("is-zoom");
+    $("viewerHint").textContent = z ? "다시 누르면 원래 크기로 돌아가요" : "사진을 누르면 더 크게 볼 수 있어요";
+  });
+  $("viewerClose").addEventListener("click", closeViewer);
+  $("viewerPrev").addEventListener("click", function () { if (vIdx > 0) { vIdx--; showViewer(); } });
+  $("viewerNext").addEventListener("click", function () { if (vIdx < vList.length - 1) { vIdx++; showViewer(); } });
+  viewer.addEventListener("click", function (e) { if (e.target === viewer || e.target === $("viewerStage")) closeViewer(); });
+  viewer.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowLeft") $("viewerPrev").click();
+    if (e.key === "ArrowRight") $("viewerNext").click();
+  });
+  viewer.addEventListener("close", function () { if (vFrom) vFrom.focus(); });
+  // 휴대폰: 옆으로 밀어서 넘기기 (확대 중이 아닐 때)
+  (function () {
+    var sx = null;
+    $("viewerStage").addEventListener("touchstart", function (e) { if (e.touches.length === 1 && !viewer.classList.contains("is-zoom")) sx = e.touches[0].clientX; }, { passive: true });
+    $("viewerStage").addEventListener("touchend", function (e) {
+      if (sx === null) return;
+      var dx = e.changedTouches[0].clientX - sx; sx = null;
+      if (Math.abs(dx) > 60) (dx < 0 ? $("viewerNext") : $("viewerPrev")).click();
+    }, { passive: true });
+  })();
   modal.addEventListener("click", function (e) { if (e.target === modal || e.target.closest("[data-close]")) closeModal(); });
   modal.addEventListener("close", function () { if (lastFocus) lastFocus.focus(); });
 
