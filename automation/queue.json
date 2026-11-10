@@ -2,6 +2,34 @@
   "commands": [
     { "id": "test-20261110-01", "action": "saveIssue",
       "args": { "isNew": true, "issue": { "호수": 99, "주차표기": "연결 테스트", "커버제목": "자동화 연결 테스트 (곧 지워져요)" } } },
-    { "id": "test-20261110-02", "action": "deleteIssue", "args": { "no": 99 } }
+    { "id": "test-20261110-02", "action": "deleteIssue", "args": { "no": 99 } },
+
+    { "id": "issue1-20261110-01", "action": "saveIssue",
+      "args": { "isNew": false, "issue": {
+        "호수": 1, "발행일": "2026-11-17", "주차표기": "11월 3주차",
+        "커버제목": "이번 겨울엔 오사카로 떠나볼까요?",
+        "커버소개": "부산에서 비행기로 1시간 남짓이면 닿는 가까운 해외예요. 도톤보리의 화려한 밤거리와 따뜻한 온천, 먹거리까지 짧은 일정에도 알차게 즐길 수 있어요. 일정과 견적은 씨앤에 편하게 문의해 주세요.",
+        "커버사진": "https://images.pexels.com/photos/34438939/pexels-photo-34438939.jpeg?auto=compress&cs=tinysrgb&w=1600",
+        "커버링크": "",
+        "상품섹션제목": "지금 떠나기 좋은 여행이에요",
+        "팁섹션제목": "떠나기 전에 이것만 챙기세요" } } },
+
+    { "id": "issue1-20261110-02", "action": "deleteRow", "args": { "table": "상품", "id": "PDD77319" } },
+    { "id": "issue1-20261110-03", "action": "deleteRow", "args": { "table": "상품", "id": "PB965A24" } },
+    { "id": "issue1-20261110-04", "action": "deleteRow", "args": { "table": "상품", "id": "P141DB72" } },
+    { "id": "issue1-20261110-05", "action": "deleteRow", "args": { "table": "상품", "id": "P9AAAE7D" } },
+    { "id": "issue1-20261110-06", "action": "deleteRow", "args": { "table": "팁", "id": "T6312AA3" } },
+    { "id": "issue1-20261110-07", "action": "deleteRow", "args": { "table": "팁", "id": "T076B59C" } },
+    { "id": "issue1-20261110-08", "action": "deleteRow", "args": { "table": "소식", "id": "N34AA0E6" } },
+
+    { "id": "issue1-20261110-09", "action": "saveRow", "args": { "table": "팁", "row": { "호수": 1,
+        "제목": "여권 유효기간을 먼저 확인하세요",
+        "내용": "나라마다 기준이 달라요. 남은 기간이 6개월이 안 되면 출발 전에 미리 재발급받아 두는 게 안전해요." } } },
+    { "id": "issue1-20261110-10", "action": "saveRow", "args": { "table": "팁", "row": { "호수": 1,
+        "제목": "겨울 성수기 항공권은 일찍 예약하세요",
+        "내용": "연말과 설 연휴에는 좌석이 빨리 차요. 일정이 정해지면 서둘러 예약하는 게 좋아요." } } },
+    { "id": "issue1-20261110-11", "action": "saveRow", "args": { "table": "팁", "row": { "호수": 1,
+        "제목": "여행자 보험도 챙겨두세요",
+        "내용": "눈길 사고나 갑작스러운 일정 변경에 대비할 수 있어요. 출발 전에 보장 내용을 확인해 두세요." } } }
   ]
 }
