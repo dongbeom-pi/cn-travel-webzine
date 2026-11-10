@@ -5,7 +5,7 @@ window.WEBZINE_CONFIG = {
 
   // Apps Script 웹 앱 주소 (배포 후 받은 https://script.google.com/macros/s/.../exec)
   // 비어 있으면 업로드·관리자 페이지가 "준비 중"으로 표시됩니다.
-  apiUrl: "",
+  apiUrl: "https://script.google.com/macros/s/AKfycbyTRYkijYuyYhyTXJRFZhZoF8qy8u-TX64KYZHPcklXv6NQbDeixyDIVFTKUnfu2nwU/exec",
 
   // 매거진 이름
   title: "씨앤 트래블 매거진",
