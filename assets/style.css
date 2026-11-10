@@ -1,0 +1,137 @@
+/* =========================================================
+   씨앤 트래블 매거진 디자인 규격
+   글자: Display 32/42 800 (모바일 26/36) · Title 22/30 700 · Subtitle 17/24 700
+         Body 15/25 400 · Caption 13/20 400 · Label 12/16 700 자간 1.5px
+   색:   Navy #12284B · Accent #0072B9 · Text #1B1F27 · Sub #5A6170
+         Line #E4E0D6 · Surface #F7F6F2
+   간격: 8px 단위. 섹션 64(PC)/40(모바일), 라벨→제목 8, 제목→본문 12, 본문→버튼 24
+   ========================================================= */
+:root{
+  --navy:#12284B; --accent:#0072B9; --sky:#8FC8EC;
+  --text:#1B1F27; --sub:#5A6170; --line:#E4E0D6;
+  --surface:#F7F6F2; --news:#EAF3FA; --bg:#FFFFFF;
+  --radius:8px; --gutter:32px; --section:64px;
+  --font:'Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:25px;word-break:keep-all}
+img{display:block;max-width:100%}
+a{color:var(--accent)}
+[hidden]{display:none !important}
+
+/* 글자 */
+.t-display{margin:8px 0 0;font-size:32px;line-height:42px;font-weight:800;letter-spacing:-.5px;color:var(--navy)}
+.t-title{margin:8px 0 0;font-size:22px;line-height:30px;font-weight:700;color:var(--navy)}
+.t-subtitle{font-size:17px;line-height:24px;font-weight:700}
+.t-body{font-size:15px;line-height:25px;font-weight:400}
+.t-caption{font-size:13px;line-height:20px;font-weight:400}
+.t-sub{color:var(--sub)}
+.label{display:block;font-size:12px;line-height:16px;font-weight:700;letter-spacing:1.5px;color:var(--accent)}
+.label--sub{color:var(--sub)}
+.label--light{color:#fff}
+.label--sky{color:var(--sky)}
+
+/* 레이아웃 */
+.container{width:100%;max-width:1080px;margin:0 auto;padding:0 var(--gutter)}
+.container--narrow{max-width:760px}
+.section{padding:var(--section) 0}
+.section--surface{background:var(--surface)}
+.section--tight{padding-top:0}
+.state{padding:96px var(--gutter);text-align:center;color:var(--sub)}
+
+/* 버튼 */
+.btn{display:inline-flex;align-items:center;justify-content:center;height:48px;padding:0 28px;border-radius:var(--radius);font:700 15px/1 var(--font);text-decoration:none;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+.btn--primary{background:var(--navy);color:#fff}
+.btn--primary:hover{background:#0B1C36}
+.btn--ghost{background:#fff;color:var(--navy);border-color:var(--navy)}
+.btn--ghost:hover{background:var(--surface)}
+.btn--sm{height:44px;padding:0 18px;font-size:13px}
+.btn:focus-visible,.card:focus-visible,.archive a:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+
+/* 헤더 */
+.topbar{border-bottom:1px solid var(--line);background:#fff}
+.topbar__inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:20px;padding-bottom:20px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+.brand img{width:56px;height:32px;object-fit:contain}
+.brand__text{display:flex;flex-direction:column;gap:2px}
+.brand__name{font-size:17px;line-height:24px;font-weight:700;color:var(--navy)}
+.strip{background:var(--navy)}
+.strip__inner{display:flex;justify-content:space-between;align-items:center;padding-top:12px;padding-bottom:12px}
+
+/* 커버 */
+.cover{padding:48px 0 var(--section)}
+.cover__inner{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:48px;align-items:center}
+.cover__media{aspect-ratio:16/10;border-radius:var(--radius);overflow:hidden;background:#D9E6F1}
+.cover__media img{width:100%;height:100%;object-fit:cover}
+.cover__body p{margin:12px 0 0}
+.cover__body .btn{margin-top:24px}
+
+/* 이미지 자리 */
+.ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#4A5A75;font-size:13px;background:#D9E6F1}
+
+/* 상품 */
+.grid{margin-top:24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.card{display:flex;flex-direction:column;text-align:left;background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;padding:0;cursor:pointer;font:inherit;color:inherit;transition:transform .15s ease, box-shadow .15s ease}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(18,40,75,.08)}
+.card__media{display:block;width:100%;aspect-ratio:16/10;overflow:hidden;background:#D9E6F1}
+.card__media img{width:100%;height:100%;object-fit:cover}
+.card__body{padding:20px;display:flex;flex-direction:column;flex-grow:1;width:100%}
+.card__name{margin-top:8px}
+.card__summary{margin-top:4px;color:var(--sub)}
+.card__spacer{flex-grow:1;min-height:16px}
+.card__foot{padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card__price{color:var(--navy)}
+.card__more{font-size:13px;line-height:20px;font-weight:700;color:var(--accent)}
+
+/* 팁 */
+.tips{list-style:none;margin:16px 0 0;padding:0}
+.tips li{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line)}
+.tips li:last-child{border-bottom:0}
+.tips__no{width:28px;flex:0 0 28px;font-size:17px;line-height:24px;font-weight:800;color:var(--accent)}
+.tips__text p{margin:4px 0 0;color:var(--sub)}
+
+/* 소식 */
+.news{padding:20px;border-radius:var(--radius);background:var(--news)}
+.news p{margin:8px 0 0}
+.news a{font-weight:700;text-decoration:none}
+
+/* 지난 호 */
+.archive{list-style:none;margin:24px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.archive a{display:flex;flex-direction:column;gap:4px;padding:20px;border:1px solid var(--line);border-radius:var(--radius);background:#fff;text-decoration:none;color:var(--text);min-height:44px}
+.archive a[aria-current="page"]{border-color:var(--navy)}
+.archive .t-subtitle{color:var(--navy)}
+
+/* 푸터 */
+.footer{background:var(--navy);color:#fff;padding:32px 0}
+.footer p{margin:0}
+.footer__name{font-size:15px;line-height:25px;font-weight:700}
+.footer__muted{margin-top:8px !important;color:#C9D1DE}
+
+/* 팝업 */
+.modal{width:min(640px,calc(100% - 32px));max-height:calc(100% - 48px);padding:0;border:0;border-radius:12px;overflow:auto;color:var(--text)}
+.modal::backdrop{background:rgba(10,20,40,.55)}
+.modal__media{aspect-ratio:16/10;background:#D9E6F1}
+.modal__media img{width:100%;height:100%;object-fit:cover}
+.modal__body{padding:28px 32px 32px}
+.modal__body p{margin:0}
+#modalSummary{margin-top:4px}
+.modal__price{margin-top:16px !important;padding-top:16px;border-top:1px solid var(--line);color:var(--navy)}
+.modal__detail{margin-top:16px !important;white-space:pre-line}
+.modal__actions{margin-top:24px;display:flex;gap:8px;flex-wrap:wrap}
+.modal__x{position:absolute;top:12px;right:12px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:var(--navy);cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* 모바일 */
+@media (max-width:760px){
+  :root{--gutter:20px;--section:40px}
+  .t-display{font-size:26px;line-height:36px}
+  .cover{padding-top:0}
+  .cover__inner{grid-template-columns:1fr;gap:0;padding:0}
+  .cover__media{border-radius:0;aspect-ratio:16/9}
+  .cover__body{padding:32px var(--gutter) 0}
+  .cover__body .btn{width:100%}
+  .grid{grid-template-columns:1fr}
+  .modal__body{padding:24px 20px}
+  .modal__actions .btn{flex:1 1 100%}
+  .brand__text .label{display:none}
+}

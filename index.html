@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>씨앤 트래블 매거진</title>
+<meta name="description" content="씨앤이 매주 소개하는 여행지와 여행 상품">
+<meta property="og:title" content="씨앤 트래블 매거진">
+<meta property="og:description" content="씨앤이 매주 소개하는 여행지와 여행 상품">
+<link rel="icon" href="images/cn-symbol.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="container topbar__inner">
+    <a class="brand" href="./">
+      <img src="images/cn-symbol.png" alt="CN" width="56" height="32">
+      <span class="brand__text">
+        <span class="brand__name" data-cfg="title">씨앤 트래블 매거진</span>
+        <span class="label label--sub" data-cfg="subtitle">CN TRAVEL MAGAZINE</span>
+      </span>
+    </a>
+    <button class="btn btn--ghost btn--sm" type="button" id="openArchive">지난 호 보기</button>
+  </div>
+</header>
+
+<div class="strip">
+  <div class="container strip__inner">
+    <span class="label label--light" id="issueWeek">WEEKLY</span>
+    <span class="label label--sky" id="issueNo"></span>
+  </div>
+</div>
+
+<main id="app">
+  <div class="container state" id="state">불러오는 중입니다…</div>
+
+  <!-- 커버 -->
+  <section class="cover" id="cover" hidden>
+    <div class="container cover__inner">
+      <div class="cover__media" id="coverMedia"></div>
+      <div class="cover__body">
+        <span class="label">이번 주 여행지</span>
+        <h1 class="t-display" id="coverTitle"></h1>
+        <p class="t-body t-sub" id="coverText"></p>
+        <a class="btn btn--primary" id="coverLink" target="_blank" rel="noopener" hidden>자세히 보기 →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 상품 -->
+  <section class="section section--surface" id="products" hidden>
+    <div class="container">
+      <span class="label">이번 주 상품</span>
+      <h2 class="t-title" id="productsTitle">지금 떠나기 좋은 여행</h2>
+      <div class="grid" id="productGrid"></div>
+    </div>
+  </section>
+
+  <!-- 여행 팁 -->
+  <section class="section" id="tips" hidden>
+    <div class="container container--narrow">
+      <span class="label">여행 팁</span>
+      <h2 class="t-title" id="tipsTitle">떠나기 전에 알아두세요</h2>
+      <ol class="tips" id="tipList"></ol>
+    </div>
+  </section>
+
+  <!-- 소식 -->
+  <section class="section section--tight" id="news" hidden>
+    <div class="container container--narrow">
+      <div class="news">
+        <span class="label">씨앤 소식</span>
+        <div id="newsList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 지난 호 -->
+  <section class="section section--surface" id="archive" hidden>
+    <div class="container">
+      <span class="label">ARCHIVE</span>
+      <h2 class="t-title">지난 호</h2>
+      <ul class="archive" id="archiveList"></ul>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <p class="footer__name">주식회사 씨앤 · 트래블 매거진</p>
+    <p class="t-caption footer__muted">문의: <span data-cfg="contact"></span></p>
+  </div>
+</footer>
+
+<!-- 상품 상세 팝업 -->
+<dialog class="modal" id="productModal" aria-labelledby="modalTitle">
+  <div class="modal__media" id="modalMedia"></div>
+  <div class="modal__body">
+    <span class="label" id="modalCategory"></span>
+    <h3 class="t-title" id="modalTitle"></h3>
+    <p class="t-caption t-sub" id="modalSummary"></p>
+    <p class="t-subtitle modal__price" id="modalPrice"></p>
+    <p class="t-body modal__detail" id="modalDetail"></p>
+    <div class="modal__actions">
+      <a class="btn btn--primary" id="modalLink" target="_blank" rel="noopener">예약 · 문의하기 →</a>
+      <button class="btn btn--ghost" type="button" data-close>닫기</button>
+    </div>
+  </div>
+  <button class="modal__x" type="button" data-close aria-label="닫기">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+</dialog>
+
+<script src="config.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
