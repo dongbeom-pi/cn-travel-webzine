@@ -23,7 +23,7 @@
 <meta name="theme-color" content="#FFFFFF">
 <link rel="icon" href="images/cn-symbol.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="assets/style.css?v=20261111m">
+<link rel="stylesheet" href="assets/style.css?v=20261111o">
 </head>
 <body>
 <div class="page">
@@ -158,6 +158,11 @@
 <dialog class="viewer" id="viewer" aria-label="안내 이미지 크게 보기">
   <div class="viewer__bar">
     <span class="viewer__count" id="viewerCount"></span>
+    <div class="viewer__zoom" role="group" aria-label="확대">
+      <button class="viewer__zb" type="button" id="zoomOut" aria-label="작게 보기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+      <button class="viewer__zl" type="button" id="zoomReset" aria-label="화면에 맞추기">100%</button>
+      <button class="viewer__zb" type="button" id="zoomIn" aria-label="크게 보기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12M12 6v12"/></svg></button>
+    </div>
     <button class="viewer__close" type="button" id="viewerClose" aria-label="닫기">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
     </button>
@@ -170,8 +175,8 @@
 
 <div class="toast" id="toast" role="status" hidden></div>
 
-<script src="config.js?v=20261111m"></script>
-<script src="assets/common.js?v=20261111m"></script>
-<script src="assets/app.js?v=20261111m"></script>
+<script src="config.js?v=20261111o"></script>
+<script src="assets/common.js?v=20261111o"></script>
+<script src="assets/app.js?v=20261111o"></script>
 </body>
 </html>

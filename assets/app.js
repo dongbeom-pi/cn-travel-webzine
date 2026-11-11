@@ -252,43 +252,122 @@
 
   // ---------- 안내 이미지 확대 ----------
   var viewer = $("viewer"), vList = [], vIdx = 0, vFrom = null;
+  // ---------- 사진 크게 보기 (확대·축소) ----------
+  var stage = $("viewerStage"), vImg = $("viewerImg");
+  var vScale = 1, vBase = 0, TOUCH = window.matchMedia("(pointer:coarse)").matches;
+  var STEPS = [1, 1.5, 2, 3, 4];
+  function baseWidth() {
+    var nw = vImg.naturalWidth || 1000, nh = vImg.naturalHeight || 1000;
+    var W = stage.clientWidth, H = stage.clientHeight - 140;   // 위·아래 막대 자리 빼고
+    if (W <= 0) return 0;
+    var tall = nh / nw > (H / W) * 1.25;
+    // 세로로 긴 사진(요금표·전단지)은 가로를 꽉 채워서 바로 읽히게, 나머지는 화면 안에 다 보이게
+    var w = tall ? Math.min(W - (W > 760 ? 80 : 0), 640) : Math.min(W - (W > 760 ? 160 : 24), (H > 200 ? H : W) * nw / nh);
+    return Math.max(120, Math.min(w, Math.max(nw, W)));
+  }
+  function setScale(s, cx, cy) {
+    s = Math.max(1, Math.min(4, s));
+    if (!vBase) vBase = baseWidth();
+    var r = stage.getBoundingClientRect();
+    if (cx == null) { cx = r.width / 2; cy = r.height / 2; }
+    var ow = vImg.offsetWidth || vBase, oh = vImg.offsetHeight || 1;
+    var ix = vImg.offsetLeft, iy = vImg.offsetTop;
+    var px = (stage.scrollLeft + cx - ix) / ow, py = (stage.scrollTop + cy - iy) / oh;   // 누른 곳이 사진의 어디인지
+    vScale = s;
+    vImg.style.width = Math.round(vBase * s) + "px";
+    stage.classList.toggle("is-zoomed", s > 1.01);
+    stage.scrollLeft = vImg.offsetLeft + px * vImg.offsetWidth - cx;
+    stage.scrollTop = vImg.offsetTop + py * vImg.offsetHeight - cy;
+    $("zoomReset").textContent = Math.round(s * 100) + "%";
+    $("zoomOut").disabled = s <= 1.01; $("zoomIn").disabled = s >= 3.99;
+  }
+  function step(dir, cx, cy) {
+    var i = 0; while (i < STEPS.length - 1 && STEPS[i] <= vScale + 0.01) i++;
+    var next = dir > 0 ? STEPS.filter(function (v) { return v > vScale + 0.01; })[0] || 4
+                       : STEPS.filter(function (v) { return v < vScale - 0.01; }).pop() || 1;
+    setScale(next, cx, cy);
+  }
+  function fitViewer() { vBase = baseWidth(); vImg.style.width = vBase + "px"; setScale(1); stage.scrollTop = 0; }
   function showViewer() {
-    viewer.classList.remove("is-zoom");
-    $("viewerImg").src = vList[vIdx];
+    vImg.style.width = ""; vBase = 0; vScale = 1;
+    vImg.onload = fitViewer;
+    vImg.src = vList[vIdx];
+    if (vImg.complete && vImg.naturalWidth) fitViewer();
     $("viewerCount").textContent = vList.length > 1 ? (vIdx + 1) + " / " + vList.length : "";
     $("viewerPrev").hidden = vList.length < 2 || vIdx === 0;
     $("viewerNext").hidden = vList.length < 2 || vIdx === vList.length - 1;
-    $("viewerHint").textContent = "사진을 누르면 더 크게 볼 수 있어요";
-    $("viewerStage").scrollTop = 0; $("viewerStage").scrollLeft = 0;
+    var hint = $("viewerHint"); hint.classList.remove("is-gone");
+    clearTimeout(showViewer._t); showViewer._t = setTimeout(function () { hint.classList.add("is-gone"); }, 3000);
+    hint.textContent = TOUCH ? "두 손가락으로 벌리거나 두 번 톡 누르면 크게 볼 수 있어요" : "사진을 누르거나 Ctrl + 휠로 크게 볼 수 있어요";
   }
   function openViewer(list, i, from) {
-    vList = list; vIdx = i; vFrom = from; showViewer();
+    vList = list; vIdx = i; vFrom = from;
     if (viewer.showModal) viewer.showModal(); else viewer.setAttribute("open", "");
+    showViewer();
   }
   function closeViewer() { if (viewer.close) viewer.close(); else viewer.removeAttribute("open"); }
-  $("viewerImg").addEventListener("click", function () {
-    var z = viewer.classList.toggle("is-zoom");
-    $("viewerHint").textContent = z ? "다시 누르면 원래 크기로 돌아가요" : "사진을 누르면 더 크게 볼 수 있어요";
+  window.addEventListener("resize", function () { if (viewer.open && vImg.naturalWidth) { vBase = baseWidth(); setScale(vScale); } });
+  $("zoomIn").addEventListener("click", function () { step(1); });
+  $("zoomOut").addEventListener("click", function () { step(-1); });
+  $("zoomReset").addEventListener("click", function () { setScale(1); });
+  // PC: 누르면 2배 ↔ 원래, Ctrl+휠로 세밀하게
+  var lastTap = 0;
+  vImg.addEventListener("click", function (e) {
+    if (TOUCH) return;
+    var r = stage.getBoundingClientRect();
+    setScale(vScale > 1.01 ? 1 : 2, e.clientX - r.left, e.clientY - r.top);
   });
+  stage.addEventListener("wheel", function (e) {
+    if (!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+    var r = stage.getBoundingClientRect();
+    setScale(vScale * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX - r.left, e.clientY - r.top);
+  }, { passive: false });
+  // 휴대폰: 두 손가락 벌리기, 두 번 톡, 확대 안 했을 때 옆으로 밀어 넘기기
+  (function () {
+    var pinch = null, sx = null, sy = null;
+    function dist(t) { return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); }
+    stage.addEventListener("touchstart", function (e) {
+      if (e.touches.length === 2) {
+        var r = stage.getBoundingClientRect();
+        pinch = { d: dist(e.touches), s: vScale, x: (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left, y: (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top };
+        sx = null;
+      } else if (e.touches.length === 1) {
+        sx = vScale <= 1.01 ? e.touches[0].clientX : null; sy = e.touches[0].clientY;
+      }
+    }, { passive: true });
+    stage.addEventListener("touchmove", function (e) {
+      if (!pinch || e.touches.length !== 2) return;
+      e.preventDefault();
+      setScale(pinch.s * dist(e.touches) / pinch.d, pinch.x, pinch.y);
+    }, { passive: false });
+    stage.addEventListener("touchend", function (e) {
+      if (pinch) { if (e.touches.length < 2) pinch = null; return; }
+      var t = e.changedTouches[0];
+      var now = Date.now();
+      if (now - lastTap < 300) {   // 두 번 톡
+        var r = stage.getBoundingClientRect();
+        setScale(vScale > 1.01 ? 1 : 2.5, t.clientX - r.left, t.clientY - r.top);
+        lastTap = 0; sx = null; return;
+      }
+      lastTap = now;
+      if (sx === null) return;
+      var dx = t.clientX - sx, dy = t.clientY - sy; sx = null;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) (dx < 0 ? $("viewerNext") : $("viewerPrev")).click();
+    }, { passive: true });
+  })();
   $("viewerClose").addEventListener("click", closeViewer);
   $("viewerPrev").addEventListener("click", function () { if (vIdx > 0) { vIdx--; showViewer(); } });
   $("viewerNext").addEventListener("click", function () { if (vIdx < vList.length - 1) { vIdx++; showViewer(); } });
   viewer.addEventListener("click", function (e) { if (e.target === viewer || e.target === $("viewerStage")) closeViewer(); });
   viewer.addEventListener("keydown", function (e) {
-    if (e.key === "ArrowLeft") $("viewerPrev").click();
-    if (e.key === "ArrowRight") $("viewerNext").click();
+    if (e.key === "ArrowLeft" && vScale <= 1.01) $("viewerPrev").click();
+    if (e.key === "ArrowRight" && vScale <= 1.01) $("viewerNext").click();
+    if (e.key === "+" || e.key === "=") step(1);
+    if (e.key === "-") step(-1);
+    if (e.key === "0") setScale(1);
   });
   viewer.addEventListener("close", function () { if (vFrom) vFrom.focus(); });
-  // 휴대폰: 옆으로 밀어서 넘기기 (확대 중이 아닐 때)
-  (function () {
-    var sx = null;
-    $("viewerStage").addEventListener("touchstart", function (e) { if (e.touches.length === 1 && !viewer.classList.contains("is-zoom")) sx = e.touches[0].clientX; }, { passive: true });
-    $("viewerStage").addEventListener("touchend", function (e) {
-      if (sx === null) return;
-      var dx = e.changedTouches[0].clientX - sx; sx = null;
-      if (Math.abs(dx) > 60) (dx < 0 ? $("viewerNext") : $("viewerPrev")).click();
-    }, { passive: true });
-  })();
   modal.addEventListener("click", function (e) { if (e.target === modal || e.target.closest("[data-close]")) closeModal(); });
   modal.addEventListener("close", function () { if (lastFocus) lastFocus.focus(); });
 
