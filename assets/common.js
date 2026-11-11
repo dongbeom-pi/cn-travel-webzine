@@ -119,13 +119,28 @@
         var img = new Image();
         img.onerror = function () { reject(new Error("사진을 열지 못했어요")); };
         img.onload = function () {
-          var s = Math.min(1, maxW / img.width);
+          // 가로는 maxW까지, 전체 화소는 아이폰 한도(약 1,600만) 안으로, 세로는 16000px 안으로
+          var MAXPX = 15000000, MAXH = 16000;
+          var s = Math.min(1, maxW / img.width, Math.sqrt(MAXPX / (img.width * img.height)), MAXH / img.height);
           var c = document.createElement("canvas");
-          c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+          c.width = Math.max(1, Math.round(img.width * s)); c.height = Math.max(1, Math.round(img.height * s));
           var ctx = c.getContext("2d");
           ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
           ctx.drawImage(img, 0, 0, c.width, c.height);
-          var data = c.toDataURL("image/jpeg", 0.85);
+          // 용량이 크면 화질을 조금씩 낮춰요 (서버는 한 장 4MB까지 받아요)
+          // 그래도 크면 크기를 조금씩 줄여요
+          var LIMIT = 3 * 1024 * 1024 * 4 / 3, q = 0.85, data = c.toDataURL("image/jpeg", q), tries = 0;
+          while (data.length > LIMIT && tries++ < 12) {
+            if (q > 0.6) q -= 0.1;
+            else {
+              var c2 = document.createElement("canvas");
+              c2.width = Math.max(1, Math.round(c.width * 0.85)); c2.height = Math.max(1, Math.round(c.height * 0.85));
+              var x2 = c2.getContext("2d"); x2.fillStyle = "#fff"; x2.fillRect(0, 0, c2.width, c2.height);
+              x2.drawImage(c, 0, 0, c2.width, c2.height); c = c2; q = 0.75;
+            }
+            data = c.toDataURL("image/jpeg", q);
+          }
+          if (data.length > LIMIT || data.length < 100) { reject(new Error("사진이 너무 커서 올리지 못했어요. 조금 잘라서 올려주세요")); return; }
           resolve({ name: file.name.replace(/\.[^.]+$/, "") + ".jpg", data: data.split(",")[1], preview: data });
         };
         img.src = reader.result;
