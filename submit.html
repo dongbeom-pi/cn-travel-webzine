@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex">
 <link rel="icon" href="images/cn-symbol.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="assets/style.css?v=20261110e">
+<link rel="stylesheet" href="assets/style.css?v=20261111a">
 </head>
 <body class="form-page">
 <div class="page">
@@ -98,13 +98,14 @@
           <h1 class="step__title" id="s4">사진을 올려주세요</h1>
           <p class="step__desc">대표 사진은 글자가 없는 가로 사진이 가장 예쁘게 보여요. 전단지나 안내문은 아래 안내 이미지에 넣어주세요.</p>
           <div class="field">
-            <span class="field__label" id="photoLabel">대표 사진<em>필수</em></span>
-            <label class="upload" id="photoDrop">
-              <input type="file" id="photo" accept="image/*" aria-labelledby="photoLabel">
-              <strong>사진 선택하기</strong>
-              <span>가로 사진 1장 · 자동으로 알맞은 크기로 줄여드려요</span>
-            </label>
+            <span class="field__label" id="photoLabel">상품 사진<em>필수</em></span>
+            <span class="field__hint">1장은 꼭 넣어주세요. 최대 5장까지 넣으면 상세 화면에서 넘겨볼 수 있어요. 첫 번째 사진이 대표 사진이에요.</span>
             <div class="thumbs" id="photoThumb"></div>
+            <label class="upload" id="photoDrop">
+              <input type="file" id="photo" accept="image/*" multiple aria-labelledby="photoLabel">
+              <strong>사진 추가하기</strong>
+              <span>여러 장을 한 번에 골라도 돼요 · 알맞은 크기로 줄여드려요</span>
+            </label>
             <span class="field__hint">무료 사진이 필요하면 <a href="https://www.pexels.com/ko-kr/" target="_blank" rel="noopener">Pexels</a>에서 받을 수 있어요.</span>
           </div>
           <div class="field">
@@ -186,8 +187,8 @@
   </main>
 </div>
 
-<script src="config.js?v=20261110e"></script>
-<script src="assets/common.js?v=20261110e"></script>
-<script src="assets/submit.js?v=20261110e"></script>
+<script src="config.js?v=20261111a"></script>
+<script src="assets/common.js?v=20261111a"></script>
+<script src="assets/submit.js?v=20261111a"></script>
 </body>
 </html>

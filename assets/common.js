@@ -134,8 +134,150 @@
     });
   }
 
+  // 사진 칸(쉼표로 여러 장)에서 주소 목록 / 첫 장
+  function photos(v) { return list(v).map(imgSrc).filter(Boolean); }
+  function firstImg(v) { return photos(v)[0] || ""; }
+
+  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var SVG = {
+    prev: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>',
+    next: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>'
+  };
+
+  // 사진 슬라이드: 손가락으로 밀기 · 점 · 좌우 버튼 · 자동 넘김(opt.auto ms)
+  function slider(box, srcs, opt) {
+    opt = opt || {};
+    if (box._slider) box._slider.stop();
+    box.textContent = ""; box._slider = null;
+    var n = srcs.length;
+    if (n < 2) {
+      media(box, srcs[0] || "", opt.alt);
+      if (n && opt.onTap) { var only = box.firstChild; only.style.cursor = "zoom-in"; only.addEventListener("click", function () { opt.onTap(0); }); }
+      return null;
+    }
+    var root = el("div", "slider");
+    root.setAttribute("role", "region");
+    root.setAttribute("aria-roledescription", "슬라이드");
+    root.setAttribute("aria-label", (opt.alt || "사진") + " " + n + "장");
+    var track = el("div", "slider__track");
+    track.tabIndex = 0;
+    srcs.forEach(function (src, i) {
+      var slide = el("div", "slider__slide");
+      slide.setAttribute("aria-label", n + "장 중 " + (i + 1) + "번째");
+      var img = el("img");
+      img.src = src; img.alt = opt.alt ? opt.alt + " " + (i + 1) : ""; img.loading = i ? "lazy" : "eager"; img.draggable = false;
+      img.onerror = function () { slide.textContent = ""; slide.appendChild(el("div", "ph")); };
+      slide.appendChild(img);
+      if (opt.onTap) { slide.style.cursor = "zoom-in"; slide.addEventListener("click", function () { opt.onTap(i); }); }
+      track.appendChild(slide);
+    });
+    var dots = el("div", "slider__dots");
+    var dotBtns = srcs.map(function (_, i) {
+      var d = el("button", "slider__dot"); d.type = "button"; d.setAttribute("aria-label", (i + 1) + "번째 사진 보기");
+      d.addEventListener("click", function (e) { e.stopPropagation(); go(i); hold(); });
+      dots.appendChild(d); return d;
+    });
+    var count = el("span", "slider__count");
+    var prev = el("button", "slider__nav slider__nav--prev"); prev.type = "button"; prev.setAttribute("aria-label", "이전 사진"); prev.innerHTML = SVG.prev;
+    var next = el("button", "slider__nav slider__nav--next"); next.type = "button"; next.setAttribute("aria-label", "다음 사진"); next.innerHTML = SVG.next;
+    prev.addEventListener("click", function (e) { e.stopPropagation(); go(idx - 1); hold(); });
+    next.addEventListener("click", function (e) { e.stopPropagation(); go(idx + 1); hold(); });
+    root.appendChild(track); root.appendChild(prev); root.appendChild(next); root.appendChild(count); root.appendChild(dots);
+    box.appendChild(root);
+
+    var idx = 0, timer = null, paused = false, resumeT = null;
+    function mark() {
+      dotBtns.forEach(function (d, i) { d.setAttribute("aria-current", String(i === idx)); });
+      count.textContent = (idx + 1) + " / " + n;
+    }
+    function go(i) {
+      idx = (i + n) % n;
+      track.scrollTo({ left: idx * track.clientWidth, behavior: REDUCED ? "auto" : "smooth" });
+      mark();
+    }
+    var st = null;
+    track.addEventListener("scroll", function () {
+      clearTimeout(st);
+      st = setTimeout(function () { var w = track.clientWidth || 1; var k = Math.round(track.scrollLeft / w); if (k !== idx) { idx = k; mark(); } }, 60);
+    }, { passive: true });
+    track.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowLeft") { e.preventDefault(); go(idx - 1); hold(); }
+      if (e.key === "ArrowRight") { e.preventDefault(); go(idx + 1); hold(); }
+    });
+    function hold() { paused = true; clearTimeout(resumeT); resumeT = setTimeout(function () { paused = false; }, 8000); }
+    ["pointerdown", "touchstart", "focusin"].forEach(function (ev) { root.addEventListener(ev, hold, { passive: true }); });
+    root.addEventListener("mouseenter", function () { paused = true; clearTimeout(resumeT); });
+    root.addEventListener("mouseleave", function () { paused = false; });
+    if (opt.auto && !REDUCED) {
+      timer = setInterval(function () { if (!paused && !document.hidden && root.isConnected) go(idx + 1); }, opt.auto);
+    }
+    window.addEventListener("resize", function () { track.scrollLeft = idx * track.clientWidth; });
+    mark();
+    var api = { stop: function () { clearInterval(timer); }, go: go };
+    box._slider = api;
+    return api;
+  }
+
+  // 여러 장 사진 고르기 (관리자·업로드 공용)
+  // o: { thumbs, drop, input, urlInput, max, maxW, onChange, onError }
+  function photoSet(o) {
+    var items = [], max = o.max || 5;
+    function render() {
+      o.thumbs.textContent = "";
+      items.forEach(function (it, i) {
+        var card = el("div", "pthumb");
+        var fig = el("div", "pthumb__img");
+        var img = el("img"); img.src = it.src; img.alt = ""; fig.appendChild(img);
+        if (i === 0) fig.appendChild(el("span", "pthumb__badge", "대표"));
+        card.appendChild(fig);
+        var bar = el("div", "pthumb__bar");
+        function mk(label, html, fn, dis) {
+          var b = el("button", "pthumb__btn"); b.type = "button"; b.setAttribute("aria-label", label); b.innerHTML = html; b.disabled = !!dis;
+          b.addEventListener("click", fn); bar.appendChild(b);
+        }
+        mk((i + 1) + "번째 사진 앞으로", SVG.prev, function () { swap(i, i - 1); }, i === 0);
+        mk((i + 1) + "번째 사진 뒤로", SVG.next, function () { swap(i, i + 1); }, i === items.length - 1);
+        mk((i + 1) + "번째 사진 지우기", "×", function () { items.splice(i, 1); render(); });
+        card.appendChild(bar);
+        o.thumbs.appendChild(card);
+      });
+      o.drop.hidden = items.length >= max;
+      if (o.urlInput) o.urlInput.hidden = items.length >= max;
+      if (o.onChange) o.onChange();
+    }
+    function swap(a, b) { if (b < 0 || b >= items.length) return; var t = items[a]; items[a] = items[b]; items[b] = t; render(); }
+    o.input.addEventListener("change", function () {
+      var fs = Array.prototype.slice.call(this.files, 0, Math.max(0, max - items.length)); this.value = "";
+      Promise.all(fs.map(function (f) { return resizeImage(f, o.maxW || 1600); }))
+        .then(function (rs) { rs.forEach(function (r) { items.push({ file: r, src: r.preview }); }); render(); })
+        .catch(function (e) { if (o.onError) o.onError(e.message); });
+    });
+    if (o.urlInput) {
+      var addUrl = function () {
+        var v = o.urlInput.value.trim();
+        if (!v) return;
+        if (!/^https?:\/\//i.test(v)) { if (o.onError) o.onError("사진 주소는 https://로 시작해야 해요"); return; }
+        if (items.length < max) items.push({ url: v, src: v });
+        o.urlInput.value = ""; render();
+      };
+      o.urlInput.addEventListener("change", addUrl);
+      o.urlInput.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); addUrl(); } });
+    }
+    o.drop.addEventListener("dragover", function () { o.drop.classList.add("is-drag"); });
+    o.drop.addEventListener("dragleave", function () { o.drop.classList.remove("is-drag"); });
+    o.drop.addEventListener("drop", function () { o.drop.classList.remove("is-drag"); });
+    return {
+      set: function (v) { items = list(v).slice(0, max).map(function (u) { return { url: u, src: imgSrc(u) }; }); render(); },
+      payload: function () { return items.map(function (it) { return it.url ? it.url : { name: it.file.name, data: it.file.data }; }); },
+      count: function () { return items.length; },
+      first: function () { return items[0] ? items[0].src : ""; },
+      clear: function () { items = []; render(); }
+    };
+  }
+
   window.WZ = {
     CFG: CFG, loadSheet: loadSheet, api: api, num: num, safeUrl: safeUrl, imgSrc: imgSrc,
-    price: price, deadline: deadline, el: el, media: media, list: list, resizeImage: resizeImage
+    price: price, deadline: deadline, el: el, media: media, list: list, resizeImage: resizeImage,
+    photos: photos, firstImg: firstImg, slider: slider, photoSet: photoSet
   };
 })();

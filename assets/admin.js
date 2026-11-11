@@ -117,7 +117,7 @@
     $("editor").hidden = !it; $("editorEmpty").hidden = !!it;
     if (!it) return;
     var no = S.cur, pub = it["공개"] === "Y";
-    W.media($("edCoverThumb"), W.imgSrc(it["커버사진"]), "");
+    W.media($("edCoverThumb"), W.firstImg(it["커버사진"]), "");
     var ch = $("edCoverChips"); ch.textContent = "";
     ch.appendChild(el("span", "chip " + (pub ? "chip--green" : "chip--gray"), pub ? "공개 중" : "비공개"));
     ch.appendChild(el("span", "chip chip--gray", no + "호" + (it["주차표기"] ? " · " + it["주차표기"] : "")));
@@ -132,7 +132,7 @@
 
     rows($("edProducts"), ps, "상품", "아직 실린 상품이 없어요. 접수함에서 싣거나 직접 추가해 주세요.", function (p) {
       var r = el("article", "adm-item");
-      var th = el("div", "adm-item__thumb"); W.media(th, W.imgSrc(p["사진"]), ""); r.appendChild(th);
+      var th = el("div", "adm-item__thumb"); W.media(th, W.firstImg(p["사진"]), ""); r.appendChild(th);
       var m = el("div", "adm-item__meta");
       var c = el("div", "chips");
       if (p["카테고리"]) c.appendChild(el("span", "chip", p["카테고리"]));
@@ -214,14 +214,14 @@
   });
 
   var IF = { iNo: "호수", iDate: "발행일", iWeek: "주차표기", iTitleIn: "커버제목", iText: "커버소개", iLink: "커버링크", iProdTitle: "상품섹션제목", iTipTitle: "팁섹션제목" };
-  var issueMode = "new", issuePhoto = null;
+  var issueMode = "new";
+  var coverSet = W.photoSet({ thumbs: $("iThumb"), drop: $("iDrop"), input: $("iPhoto"), urlInput: $("iPhotoUrl"), max: 5,
+    onError: function (m) { showErr("iError", m); } });
   function fillIssue(it) {
     Object.keys(IF).forEach(function (k) { $(k).value = it ? (it[IF[k]] || "") : ""; });
-    $("iPhotoUrl").value = it ? (it["커버사진"] || "") : "";
-    issuePhoto = null; photoThumb($("iThumb"), $("iDrop"), null, $("iPhotoUrl").value, function () { issuePhoto = null; $("iPhotoUrl").value = ""; fillIssuePhoto(); });
+    coverSet.set(it ? it["커버사진"] : "");
     $("iError").hidden = true;
   }
-  function fillIssuePhoto() { photoThumb($("iThumb"), $("iDrop"), issuePhoto, $("iPhotoUrl").value, function () { issuePhoto = null; $("iPhotoUrl").value = ""; fillIssuePhoto(); }); }
   function newIssue() {
     issueMode = "new"; fillIssue(null);
     $("iNo").value = S.issues.length ? num(S.issues[0]["호수"]) + 1 : 1; $("iNo").disabled = false;
@@ -233,26 +233,22 @@
     $("iTitle").textContent = S.cur + "호 커버 고치기";
     openModal("issueModal");
   });
-  $("iPhoto").addEventListener("change", function () {
-    var f = this.files[0]; this.value = ""; if (!f) return;
-    W.resizeImage(f, 1600).then(function (r) { issuePhoto = r; fillIssuePhoto(); }).catch(function (e) { showErr("iError", e.message); });
-  });
-  $("iPhotoUrl").addEventListener("change", fillIssuePhoto);
   $("iSubmit").addEventListener("click", function () {
     var data = {}; Object.keys(IF).forEach(function (k) { data[IF[k]] = $(k).value.trim(); });
-    data["커버사진"] = $("iPhotoUrl").value.trim();
     var no = num(data["호수"]);
     if (!no) return showErr("iError", "호수를 숫자로 넣어주세요.");
     if (!data["커버제목"]) return showErr("iError", "커버 제목을 써주세요.");
     if (issueMode === "new" && issueOf(no)) return showErr("iError", no + "호는 이미 있어요.");
     var done = busy(this);
-    call("saveIssue", { issue: data, isNew: issueMode === "new", photo: issuePhoto ? { name: issuePhoto.name, data: issuePhoto.data } : null })
+    call("saveIssue", { issue: data, isNew: issueMode === "new", photos: coverSet.payload() })
       .then(function () { closeModal("issueModal"); S.cur = no; selectTab("edit"); toast(no + "호를 저장했어요"); return load(); })
       .catch(function (e) { showErr("iError", e.message); }).then(done);
   });
 
   // ---------- 상품 ----------
-  var prod = { id: "", photo: null, attach: [], newAttach: [] };
+  var prod = { id: "", attach: [], newAttach: [] };
+  var prodSet = W.photoSet({ thumbs: $("pPhotoThumb"), drop: $("pPhotoDrop"), input: $("pPhoto"), urlInput: $("pPhotoUrl"), max: 5,
+    onError: function (m) { showErr("pError", m); } });
   function issueOptions(sel, cur) {
     sel.textContent = "";
     S.issues.forEach(function (it) {
@@ -263,7 +259,8 @@
     if (cur) sel.value = cur;
   }
   function editProduct(p) {
-    prod = { id: p ? p.id : "", photo: null, attach: p ? W.list(p["첨부이미지"]) : [], newAttach: [] };
+    prod = { id: p ? p.id : "", attach: p ? W.list(p["첨부이미지"]) : [], newAttach: [] };
+    prodSet.set(p ? p["사진"] : "");
     issueOptions($("pIssue"), p ? num(p["호수"]) : S.cur);
     $("pCat").value = p ? p["카테고리"] || "" : "";
     $("pName").value = p ? p["상품명"] || "" : "";
@@ -272,7 +269,6 @@
     var d = p && String(p["마감일"] || "").match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
     $("pDeadline").value = d ? d[1] + "-" + ("0" + d[2]).slice(-2) + "-" + ("0" + d[3]).slice(-2) : "";
     $("pDetail").value = p ? p["상세설명"] || "" : "";
-    $("pPhotoUrl").value = p ? p["사진"] || "" : "";
     $("pLink").value = p ? p["링크"] || "" : "";
     $("pTitle").textContent = p ? "상품 고치기" : "상품 추가";
     $("pError").hidden = true;
@@ -280,17 +276,11 @@
     openModal("productModal");
   }
   function fillProdPhotos() {
-    photoThumb($("pPhotoThumb"), $("pPhotoDrop"), prod.photo, $("pPhotoUrl").value, function () { prod.photo = null; $("pPhotoUrl").value = ""; fillProdPhotos(); });
     var box = $("pAttachThumbs"); box.textContent = "";
     prod.attach.forEach(function (u, i) { thumbItem(box, W.imgSrc(u), function () { prod.attach.splice(i, 1); fillProdPhotos(); }); });
     prod.newAttach.forEach(function (a, i) { thumbItem(box, a.preview, function () { prod.newAttach.splice(i, 1); fillProdPhotos(); }); });
   }
   $("addProduct").addEventListener("click", function () { editProduct(null); });
-  $("pPhoto").addEventListener("change", function () {
-    var f = this.files[0]; this.value = ""; if (!f) return;
-    W.resizeImage(f, 1600).then(function (r) { prod.photo = r; fillProdPhotos(); }).catch(function (e) { showErr("pError", e.message); });
-  });
-  $("pPhotoUrl").addEventListener("change", fillProdPhotos);
   $("pAttach").addEventListener("change", function () {
     var fs = Array.prototype.slice.call(this.files, 0, 5); this.value = "";
     Promise.all(fs.map(function (f) { return W.resizeImage(f, 1400); }))
@@ -301,7 +291,7 @@
     var row = {
       id: prod.id, "호수": $("pIssue").value, "카테고리": $("pCat").value.trim(), "상품명": $("pName").value.trim(),
       "한줄설명": $("pSummary").value.trim(), "가격": $("pPrice").value.replace(/[^0-9]/g, ""), "마감일": $("pDeadline").value,
-      "상세설명": $("pDetail").value.trim(), "사진": $("pPhotoUrl").value.trim(), "링크": $("pLink").value.trim(),
+      "상세설명": $("pDetail").value.trim(), "링크": $("pLink").value.trim(),
       "첨부이미지": prod.attach.join(", ")
     };
     if (!num(row["호수"])) return showErr("pError", "실을 호를 골라주세요. 호가 없으면 먼저 만들어 주세요.");
@@ -311,7 +301,7 @@
     var done = busy(this);
     call("saveRow", {
       table: "상품", row: row,
-      photo: prod.photo ? { name: prod.photo.name, data: prod.photo.data } : null,
+      photos: prodSet.payload(),
       attachments: prod.newAttach.map(function (a) { return { name: a.name, data: a.data }; })
     }).then(function () { closeModal("productModal"); S.cur = num(row["호수"]); toast("상품을 저장했어요"); return load(); })
       .catch(function (e) { showErr("pError", e.message); }).then(done);
@@ -358,12 +348,7 @@
     x.addEventListener("click", onRemove); t.appendChild(x);
     box.appendChild(t);
   }
-  function photoThumb(box, drop, file, url, onRemove) {
-    box.textContent = "";
-    var src = file ? file.preview : W.imgSrc(url);
-    if (src) thumbItem(box, src, onRemove, true);
-    drop.hidden = !!src;
-  }
+
   function counts() {
     document.querySelectorAll("#productForm [data-count]").forEach(function (c) {
       var len = $(c.getAttribute("data-count")).value.length, max = +c.getAttribute("data-max");
@@ -378,7 +363,7 @@
     if (!items.length) { box.appendChild(el("div", "adm-empty", empty)); return; }
     items.forEach(function (s) {
       var r = el("article", "adm-item");
-      var th = el("div", "adm-item__thumb"); W.media(th, s.photo, ""); r.appendChild(th);
+      var th = el("div", "adm-item__thumb"); W.media(th, W.firstImg(s.photo), ""); r.appendChild(th);
       var m = el("div", "adm-item__meta");
       var c = el("div", "chips");
       if (s.category) c.appendChild(el("span", "chip", s.category));
@@ -401,7 +386,7 @@
   }
   var curSub = null;
   function view(s) {
-    W.media($("vMedia"), s.photo, s.title);
+    W.slider($("vMedia"), W.photos(s.photo), { alt: s.title });
     var c = $("vChips"); c.textContent = ""; if (s.category) c.appendChild(el("span", "chip", s.category));
     $("vTitle").textContent = s.title; $("vSummary").textContent = s.summary;
     $("vPrice").textContent = W.price(s.price); $("vDetail").textContent = s.detail;
@@ -433,16 +418,6 @@
     var done = busy(this, "처리하고 있어요…");
     call("reject", { id: curSub.id, memo: $("rMemo").value.trim() }).then(function () {
       closeModal("rejectModal"); toast("반려했어요"); return load();
-    }).catch(function (e) { toast(e.message); }).then(done);
-  });
-
-  // ---------- 자동화 ----------
-  $("runQueue").addEventListener("click", function () {
-    var done = busy(this, "실행하고 있어요…");
-    call("runQueue").then(function (res) {
-      var r = res.result || {};
-      toast(r.error ? "자동화: " + r.error : "자동화 지시 " + (r.ran || 0) + "건 실행" + (r.failed ? ", " + r.failed + "건 실패" : ""));
-      return load();
     }).catch(function (e) { toast(e.message); }).then(done);
   });
 

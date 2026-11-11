@@ -24,7 +24,7 @@
     $("issueLabel").textContent = issueLabel(issue);
     $("coverTitle").textContent = issue["커버제목"];
     $("coverText").textContent = issue["커버소개"];
-    W.media($("coverMedia"), W.imgSrc(issue["커버사진"]), issue["커버제목"]);
+    W.slider($("coverMedia"), W.photos(issue["커버사진"]), { alt: issue["커버제목"], auto: 5000 });
     var u = W.safeUrl(issue["커버링크"]);
     if (u) { $("coverLink").href = u; $("coverLink").hidden = false; }
     document.title = issue["커버제목"] + " | " + (CFG.title || "씨앤 트래블 매거진");
@@ -48,7 +48,9 @@
       card.type = "button";
       card.setAttribute("aria-haspopup", "dialog");
       var m = el("span", "card__media");
-      W.media(m, W.imgSrc(p["사진"]), p["상품명"]);
+      var pics = W.photos(p["사진"]);
+      W.media(m, pics[0] || "", p["상품명"]);
+      if (pics.length > 1) m.appendChild(el("span", "card__count", "사진 " + pics.length));
       card.appendChild(m);
       var c = el("span", "card__chips"); chips(c, p, true); card.appendChild(c);
       card.appendChild(el("span", "card__name t-card", p["상품명"]));
@@ -98,7 +100,7 @@
     others.forEach(function (it) {
       var a = el("a");
       a.href = "?no=" + num(it["호수"]) + (PREVIEW ? "&preview=1" : "");
-      var th = el("span", "archive__thumb"); W.media(th, W.imgSrc(it["커버사진"]), "");
+      var th = el("span", "archive__thumb"); W.media(th, W.firstImg(it["커버사진"]), "");
       var tx = el("span");
       tx.appendChild(el("span", "archive__meta t-cap c-sub", issueLabel(it)));
       tx.appendChild(el("span", "archive__title", it["커버제목"]));
@@ -113,7 +115,8 @@
   var modal = $("productModal"), lastFocus = null;
   function openProduct(p, from) {
     lastFocus = from;
-    W.media($("modalMedia"), W.imgSrc(p["사진"]), p["상품명"]);
+    var gallery = W.photos(p["사진"]);
+    W.slider($("modalMedia"), gallery, { alt: p["상품명"], onTap: function (i) { openViewer(gallery, i, $("modalMedia")); } });
     chips($("modalChips"), p, true);
     $("modalTitle").textContent = p["상품명"];
     $("modalSummary").textContent = p["한줄설명"];

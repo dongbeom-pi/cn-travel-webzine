@@ -4,7 +4,7 @@
   var W = window.WZ, el = W.el;
   var $ = function (id) { return document.getElementById(id); };
   var form = $("form"), steps = form.querySelectorAll(".step"), TOTAL = steps.length;
-  var step = 1, photo = null, attachments = [], sending = false;
+  var step = 1, attachments = [], sending = false, photoSet = null;
   var DRAFT_KEY = "wz-submit-draft";
 
   if (!W.CFG.apiUrl) $("noApi").hidden = false;
@@ -66,7 +66,8 @@
     $("pvSummary").textContent = d.summary || "한 줄 설명이 여기에 나와요";
     $("pvPrice").textContent = W.price(d.price);
     var m = $("pvMedia"); m.textContent = "";
-    if (photo) { var i = el("img"); i.src = photo.preview; i.alt = ""; m.appendChild(i); } else m.appendChild(el("span", "ph"));
+    var first = photoSet && photoSet.first();
+    if (first) { var i = el("img"); i.src = first; i.alt = ""; m.appendChild(i); } else m.appendChild(el("span", "ph"));
   }
 
   // ---------- 오류 표시 ----------
@@ -111,9 +112,9 @@
       if (!$("priceAsk").checked && val("price") && !/^[0-9,]+$/.test(val("price")))
         first = first || fieldError($("price"), "가격은 숫자만 입력해 주세요");
     }
-    if (n === 4 && !photo) {
+    if (n === 4 && !photoSet.count()) {
       var e2 = el("span", "field__error", "대표 사진을 한 장 올려주세요");
-      $("photoThumb").after(e2); first = first || $("photo");
+      $("photoDrop").after(e2); first = first || $("photo");
     }
     if (n === 5) {
       if (need("link", "문의나 신청을 받을 곳을 알려주세요") && !W.safeUrl(d.link))
@@ -128,7 +129,7 @@
     var d = data(), r = $("review"); r.textContent = "";
     [["부서 · 담당자", d.dept + " · " + d.name], ["연락처", d.contact], ["카테고리", d.category], ["상품명", d.title],
      ["한 줄 설명", d.summary], ["자세한 설명", d.detail], ["가격", W.price(d.price)],
-     ["마감일", d.deadline || "없음"], ["사진", (photo ? "대표 사진 1장" : "") + (attachments.length ? " · 안내 이미지 " + attachments.length + "장" : "")]]
+     ["마감일", d.deadline || "없음"], ["사진", (photoSet.count() ? "상품 사진 " + photoSet.count() + "장" : "") + (attachments.length ? " · 안내 이미지 " + attachments.length + "장" : "")]]
       .forEach(function (row) {
         var div = el("div"); div.appendChild(el("dt", "", row[0])); div.appendChild(el("dd", "", row[1])); r.appendChild(div);
       });
@@ -166,7 +167,8 @@
     }
     sending = true; btn.disabled = true; btn.textContent = "보내는 중이에요…";
     var d = data();
-    d.photo = { name: photo.name, data: photo.data };
+    d.photos = photoSet.payload();
+    d.photo = d.photos[0]; // 이전 버전 서버 호환
     d.attachments = attachments.map(function (a) { return { name: a.name, data: a.data }; });
     W.api("submit", d).then(function (res) {
       clearDraft();
@@ -191,9 +193,6 @@
     box.appendChild(t);
   }
   function renderPhotos() {
-    $("photoThumb").textContent = "";
-    if (photo) thumb($("photoThumb"), photo, function () { photo = null; renderPhotos(); }, true);
-    $("photoDrop").hidden = !!photo;
     $("attachThumbs").textContent = "";
     attachments.forEach(function (a, i) {
       thumb($("attachThumbs"), a, function () { attachments.splice(i, 1); renderPhotos(); });
@@ -202,18 +201,16 @@
     updatePreview();
   }
   function showErr(msg) { $("formError").textContent = msg; $("formError").hidden = false; }
-  $("photo").addEventListener("change", function () {
-    var f = this.files[0]; this.value = "";
-    if (!f) return;
-    W.resizeImage(f, 1600).then(function (r) { photo = r; renderPhotos(); }).catch(function (e) { showErr(e.message); });
-  });
+  photoSet = W.photoSet({ thumbs: $("photoThumb"), drop: $("photoDrop"), input: $("photo"), max: 5,
+    onChange: function () { var er = $("photoDrop").parentNode.querySelector(".field__error"); if (er && photoSet && photoSet.count()) er.remove(); updatePreview(); },
+    onError: function (m) { showErr(m); } });
   $("attach").addEventListener("change", function () {
     var fs = Array.prototype.slice.call(this.files, 0, 3 - attachments.length); this.value = "";
     Promise.all(fs.map(function (f) { return W.resizeImage(f, 1400); }))
       .then(function (rs) { attachments = attachments.concat(rs); renderPhotos(); })
       .catch(function (e) { showErr(e.message); });
   });
-  ["photoDrop", "attachDrop"].forEach(function (id) {
+  ["attachDrop"].forEach(function (id) {
     var z = $(id);
     z.addEventListener("dragover", function () { z.classList.add("is-drag"); });
     z.addEventListener("dragleave", function () { z.classList.remove("is-drag"); });

@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex">
 <link rel="icon" href="images/cn-symbol.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="assets/style.css?v=20261110e">
+<link rel="stylesheet" href="assets/style.css?v=20261111a">
 </head>
 <body class="form-page">
 <div class="page">
@@ -99,7 +99,6 @@
       <section role="tabpanel" id="pane-done" aria-labelledby="tab-done" hidden><div class="adm-list" id="listDone"></div></section>
 
       <div class="adm-foot">
-        <button class="btn btn--sm btn--gray" type="button" id="runQueue">자동화 지시 지금 실행</button>
         <a class="btn btn--sm btn--gray" id="sheetLink" target="_blank" rel="noopener">원본 시트 열기</a>
         <button class="btn btn--sm btn--gray show-sm" type="button" id="logoutBtn2">로그아웃</button>
       </div>
@@ -121,10 +120,11 @@
       <div class="field"><label class="field__label" for="pDeadline">신청 마감일</label><input class="input" id="pDeadline" type="date"></div>
       <div class="field span2"><label class="field__label" for="pDetail">자세한 설명</label><textarea class="textarea" id="pDetail" style="min-height:140px"></textarea></div>
       <div class="field span2">
-        <span class="field__label" id="pPhotoLabel">대표 사진</span>
+        <span class="field__label" id="pPhotoLabel">상품 사진 (최대 5장)</span>
+        <span class="field__hint">첫 번째 사진이 카드에 보이는 대표 사진이에요. 화살표로 순서를 바꿀 수 있어요.</span>
         <div class="thumbs" id="pPhotoThumb"></div>
-        <label class="upload" id="pPhotoDrop" style="min-height:110px"><input type="file" id="pPhoto" accept="image/*" aria-labelledby="pPhotoLabel"><strong>사진 선택하기</strong><span>가로 사진 1장</span></label>
-        <input class="input" id="pPhotoUrl" placeholder="또는 사진 주소(https://…) 붙여넣기">
+        <label class="upload" id="pPhotoDrop" style="min-height:110px"><input type="file" id="pPhoto" accept="image/*" multiple aria-labelledby="pPhotoLabel"><strong>사진 추가하기</strong><span>여러 장을 한 번에 골라도 돼요</span></label>
+        <input class="input" id="pPhotoUrl" placeholder="또는 사진 주소(https://…)를 붙여넣고 Enter">
       </div>
       <div class="field span2">
         <span class="field__label" id="pAttachLabel">안내 이미지</span>
@@ -172,10 +172,11 @@
       <div class="field span2"><label class="field__label" for="iTitleIn">커버 제목<em>필수</em></label><input class="input" id="iTitleIn" placeholder="예) 이번 겨울엔 오사카로 떠나볼까요?" required></div>
       <div class="field span2"><label class="field__label" for="iText">커버 소개</label><textarea class="textarea" id="iText" style="min-height:110px" placeholder="2~3줄, 해요체로 써주세요"></textarea></div>
       <div class="field span2">
-        <span class="field__label" id="iPhotoLabel">커버 사진</span>
+        <span class="field__label" id="iPhotoLabel">커버 사진 (최대 5장)</span>
+        <span class="field__hint">여러 장이면 웹진 첫 화면에서 5초마다 넘어가요. 첫 번째 사진이 지난 호 목록에도 쓰여요.</span>
         <div class="thumbs" id="iThumb"></div>
-        <label class="upload" id="iDrop" style="min-height:110px"><input type="file" id="iPhoto" accept="image/*" aria-labelledby="iPhotoLabel"><strong>사진 선택하기</strong><span>가로 사진 · 4:3 비율로 보여요</span></label>
-        <input class="input" id="iPhotoUrl" placeholder="또는 사진 주소(https://…) 붙여넣기">
+        <label class="upload" id="iDrop" style="min-height:110px"><input type="file" id="iPhoto" accept="image/*" multiple aria-labelledby="iPhotoLabel"><strong>사진 추가하기</strong><span>가로 사진 · 4:3 비율로 보여요</span></label>
+        <input class="input" id="iPhotoUrl" placeholder="또는 사진 주소(https://…)를 붙여넣고 Enter">
       </div>
       <div class="field span2"><label class="field__label" for="iLink">커버 버튼 링크</label><input class="input" id="iLink" placeholder="https://… (없으면 버튼이 안 보여요)"></div>
       <div class="field"><label class="field__label" for="iProdTitle">상품 섹션 제목</label><input class="input" id="iProdTitle" placeholder="지금 떠나기 좋은 여행이에요"></div>
@@ -244,8 +245,8 @@
 
 <div class="toast" id="toast" role="status" hidden></div>
 
-<script src="config.js?v=20261110e"></script>
-<script src="assets/common.js?v=20261110e"></script>
-<script src="assets/admin.js?v=20261110e"></script>
+<script src="config.js?v=20261111a"></script>
+<script src="assets/common.js?v=20261111a"></script>
+<script src="assets/admin.js?v=20261111a"></script>
 </body>
 </html>
