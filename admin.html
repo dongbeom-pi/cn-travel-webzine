@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex">
 <link rel="icon" href="images/cn-symbol.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="assets/style.css?v=20261111a">
+<link rel="stylesheet" href="assets/style.css?v=20261111c">
 </head>
 <body class="form-page">
 <div class="page">
@@ -52,6 +52,7 @@
         <button class="tab" role="tab" id="tab-edit" aria-controls="pane-edit" aria-selected="true">호 편집</button>
         <button class="tab" role="tab" id="tab-wait" aria-controls="pane-wait" aria-selected="false">새로 들어온 상품<b id="cntWait">0</b></button>
         <button class="tab" role="tab" id="tab-done" aria-controls="pane-done" aria-selected="false">처리한 상품</button>
+        <button class="tab" role="tab" id="tab-stats" aria-controls="pane-stats" aria-selected="false">통계</button>
       </div>
 
       <!-- 호 편집 -->
@@ -97,6 +98,17 @@
 
       <section role="tabpanel" id="pane-wait" aria-labelledby="tab-wait" hidden><div class="adm-list" id="listWait"></div></section>
       <section role="tabpanel" id="pane-done" aria-labelledby="tab-done" hidden><div class="adm-list" id="listDone"></div></section>
+      <section role="tabpanel" id="pane-stats" aria-labelledby="tab-stats" hidden>
+        <div class="stats-head">
+          <div class="issue-pick" id="statPick" style="margin:0"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn--sm btn--gray" type="button" id="statReload">새로고침</button>
+            <button class="btn btn--sm btn--primary" type="button" id="statCopy">WSR용 요약 복사</button>
+          </div>
+        </div>
+        <div id="statBody"></div>
+        <p class="t-cap c-sub" style="margin-top:20px">미리보기와 관리자 화면은 세지 않아요. 방문자는 기기마다 1명으로 세고, 이름·연락처 같은 개인정보는 모으지 않아요.</p>
+      </section>
 
       <div class="adm-foot">
         <a class="btn btn--sm btn--gray" id="sheetLink" target="_blank" rel="noopener">원본 시트 열기</a>
@@ -245,8 +257,8 @@
 
 <div class="toast" id="toast" role="status" hidden></div>
 
-<script src="config.js?v=20261111a"></script>
-<script src="assets/common.js?v=20261111a"></script>
-<script src="assets/admin.js?v=20261111a"></script>
+<script src="config.js?v=20261111c"></script>
+<script src="assets/common.js?v=20261111c"></script>
+<script src="assets/admin.js?v=20261111c"></script>
 </body>
 </html>

@@ -18,6 +18,57 @@
     return (it["주차표기"] || it["발행일"] || "") + " · " + no + "호" + (it["공개"] !== "Y" ? " · 미리보기" : "");
   }
   function show(id) { $(id).hidden = false; }
+  var CUR = { no: 0, title: "", products: [] };
+
+  // ---------- 통계 (익명) ----------
+  // 미리보기(?preview=1)는 세지 않아요. 개인을 알아볼 수 있는 정보는 보내지 않아요.
+  function visitor() {
+    try {
+      var v = localStorage.getItem("wz-v");
+      if (!v) { v = Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); localStorage.setItem("wz-v", v); }
+      return v;
+    } catch (e) { return ""; }
+  }
+  function track(type, target, name) {
+    if (PREVIEW || !CFG.apiUrl || !CUR.no) return;
+    var body = JSON.stringify({ action: "track", type: type, issue: CUR.no, target: target || "", name: (name || "").slice(0, 60),
+      v: visitor(), ref: params.get("ref") || (document.referrer ? "web" : "direct"), w: window.innerWidth < 761 ? "m" : "d" });
+    try {
+      if (navigator.sendBeacon && navigator.sendBeacon(CFG.apiUrl, new Blob([body], { type: "text/plain;charset=utf-8" }))) return;
+    } catch (e) { /* 아래로 */ }
+    try { fetch(CFG.apiUrl, { method: "POST", body: body, headers: { "Content-Type": "text/plain;charset=utf-8" }, keepalive: true, mode: "no-cors" }); } catch (e) { /* 무시 */ }
+  }
+
+  // ---------- 공유 ----------
+  function toast(msg) {
+    var t = $("toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast._t); toast._t = setTimeout(function () { t.hidden = true; }, 2400);
+  }
+  function shareUrl(productId) {
+    var base = location.origin + location.pathname.replace(/index\.html$/, "");
+    return base + "?no=" + CUR.no + (productId ? "&p=" + encodeURIComponent(productId) : "") + "&ref=share";
+  }
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise(function (res, rej) {
+      var ta = el("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy") ? res() : rej(); } catch (e) { rej(e); } finally { ta.remove(); }
+    });
+  }
+  function share(title, text, url, target) {
+    track("share", target || "", title);
+    var mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (navigator.share && mobile) {
+      navigator.share({ title: title, text: text, url: url }).catch(function () { /* 닫음 */ });
+      return;
+    }
+    copyText(url).then(function () { toast("링크를 복사했어요. 카톡이나 메일에 붙여넣어 보내세요"); })
+      .catch(function () { window.prompt("아래 링크를 복사해 주세요", url); });
+  }
+  $("shareBtn").addEventListener("click", function () {
+    share((CFG.title || "씨앤 트래블 매거진") + " " + CUR.no + "호", CUR.title, shareUrl(""));
+  });
 
   // ---------- 커버 ----------
   function renderCover(issue) {
@@ -26,7 +77,7 @@
     $("coverText").textContent = issue["커버소개"];
     W.slider($("coverMedia"), W.photos(issue["커버사진"]), { alt: issue["커버제목"], auto: 5000 });
     var u = W.safeUrl(issue["커버링크"]);
-    if (u) { $("coverLink").href = u; $("coverLink").hidden = false; }
+    if (u) { $("coverLink").href = u; $("coverLink").hidden = false; $("coverLink").onclick = function () { track("cover", "", issue["커버제목"]); }; }
     document.title = issue["커버제목"] + " | " + (CFG.title || "씨앤 트래블 매거진");
     show("cover");
   }
@@ -113,8 +164,10 @@
 
   // ---------- 상세 팝업 ----------
   var modal = $("productModal"), lastFocus = null;
+  var curProduct = null;
   function openProduct(p, from) {
-    lastFocus = from;
+    lastFocus = from; curProduct = p;
+    track("product", p.id || p["상품명"], p["상품명"]);
     var gallery = W.photos(p["사진"]);
     W.slider($("modalMedia"), gallery, { alt: p["상품명"], onTap: function (i) { openViewer(gallery, i, $("modalMedia")); } });
     chips($("modalChips"), p, true);
@@ -156,8 +209,16 @@
     modal.querySelector(".modal__scroll").scrollTop = 0;
     if (modal.showModal) modal.showModal(); else modal.setAttribute("open", "");
   }
+  $("modalShare").addEventListener("click", function () {
+    if (!curProduct) return;
+    share(curProduct["상품명"], curProduct["한줄설명"] || CUR.title, shareUrl(curProduct.id), curProduct.id);
+  });
+  $("modalLink").addEventListener("click", function () {
+    if (curProduct) track("inquiry", curProduct.id || curProduct["상품명"], curProduct["상품명"]);
+  });
   $("attachToggle").addEventListener("click", function () {
     var open = $("attachList").hidden;
+    if (open && curProduct) track("guide", curProduct.id || curProduct["상품명"], curProduct["상품명"]);
     $("attachList").hidden = !open;
     this.setAttribute("aria-expanded", String(open));
     this.textContent = open ? "안내 이미지 접기" : "안내 이미지 보기";
@@ -225,13 +286,23 @@
       var issue = issues.filter(function (r) { return num(r["호수"]) === want; })[0] || issues[0];
       var no = num(issue["호수"]);
       $("state").hidden = true;
-      renderCover(issue);
       var products = d[1].filter(sameIssue(no)).sort(byOrder);
+      CUR = { no: no, title: issue["커버제목"] || "", products: products };
+      $("shareBtn").hidden = false;
+      renderCover(issue);
       renderProducts(issue, products);
       if (products.length) $("toProducts").hidden = false;
       renderTips(issue, d[2].filter(sameIssue(no)).sort(byOrder));
       renderNews(d[3].filter(sameIssue(no)).sort(byOrder));
       renderArchive(issues, no);
+      // 상품 링크로 들어온 경우 그 상품을 바로 열기
+      var pid = params.get("p");
+      if (pid) {
+        var hit = products.filter(function (p) { return p.id === pid; })[0];
+        var idx = products.indexOf(hit);
+        if (hit) setTimeout(function () { openProduct(hit, $("productGrid").children[idx]); }, 150);
+      }
+      track("view", "", issue["커버제목"]);
     })
     .catch(function () {
       stateMsg("내용을 불러오지 못했어요", "잠시 후 다시 들어와 주세요");

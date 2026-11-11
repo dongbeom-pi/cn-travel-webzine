@@ -7,7 +7,7 @@
    모서리: 사진 20~28 · 카드 24 · 버튼·입력 16 · 칩 8
    ========================================================= */
 :root{
-  --text:#191F28; --g700:#4E5968; --g600:#6B7684; --g300:#D1D6DB; --g200:#E5E8EB; --g100:#F2F4F6; --g50:#F9FAFB;
+  --text:#191F28; --g700:#4E5968; --g600:#5F6A77; --g300:#D1D6DB; --g200:#E5E8EB; --g100:#F2F4F6; --g50:#F9FAFB;
   --blue:#0072B9; --blue-d:#005A93; --blue-l:#E8F3FB; --red:#D93A3F; --red-l:#FDECEC; --green:#0E8A5F; --green-l:#E6F6EF;
   --font:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   --wrap:1040px; --pad:24px;
@@ -50,7 +50,7 @@ button{font-family:inherit}
 .btn[disabled]{opacity:.45;cursor:not-allowed}
 .chip{display:inline-flex;align-items:center;height:26px;padding:0 8px;border-radius:8px;background:var(--blue-l);color:var(--blue);font-size:13px;font-weight:700;white-space:nowrap}
 .chip--red{background:var(--red-l);color:var(--red)}
-.chip--gray{background:var(--g100);color:var(--g600)}
+.chip--gray{background:var(--g100);color:var(--g700)}
 .chip--green{background:var(--green-l);color:var(--green)}
 
 /* 사진 자리 */
@@ -195,7 +195,7 @@ button{font-family:inherit}
 .wizard__nav{margin-top:40px;display:flex;gap:8px}
 .wizard__nav .btn--primary{flex:1}
 .preview{position:sticky;top:96px}
-.preview__label{margin-bottom:12px;font-size:14px;font-weight:700;color:var(--g600)}
+.preview__label{margin-bottom:12px;font-size:14px;font-weight:700;color:var(--g700)}
 .preview__card{padding:20px;border-radius:24px;background:#fff}
 .example{margin-top:16px;padding:20px;border-radius:20px;background:#fff}
 .example summary{cursor:pointer;font-size:15px;font-weight:700;color:var(--g700);min-height:28px}
@@ -366,12 +366,12 @@ button{font-family:inherit}
 .slider__dot{pointer-events:auto;width:24px;height:24px;padding:0;border:0;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .slider__dot::before{content:"";width:7px;height:7px;border-radius:4px;background:rgba(255,255,255,.6);box-shadow:0 0 0 1px rgba(0,0,0,.08);transition:width .2s,background .2s}
 .slider__dot[aria-current="true"]::before{width:20px;background:#fff}
-.slider__count{position:absolute;top:12px;right:12px;padding:3px 9px;border-radius:999px;background:rgba(0,0,0,.45);color:#fff;font-size:12px;line-height:18px;font-weight:700;font-variant-numeric:tabular-nums;pointer-events:none}
+.slider__count{position:absolute;top:12px;right:12px;padding:3px 9px;border-radius:999px;background:rgba(0,0,0,.72);color:#fff;font-size:12px;line-height:18px;font-weight:700;font-variant-numeric:tabular-nums;pointer-events:none}
 .slider__nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.9);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .2s;box-shadow:0 2px 8px rgba(0,0,0,.12)}
 .slider__nav--prev{left:12px} .slider__nav--next{right:12px}
 .slider:hover .slider__nav,.slider:focus-within .slider__nav{opacity:1}
 @media (hover:none){.slider__nav{display:none}}
-.card__count{position:absolute;right:10px;bottom:10px;padding:3px 9px;border-radius:999px;background:rgba(0,0,0,.5);color:#fff;font-size:12px;line-height:18px;font-weight:700}
+.card__count{position:absolute;right:10px;bottom:10px;padding:3px 9px;border-radius:999px;background:rgba(0,0,0,.72);color:#fff;font-size:12px;line-height:18px;font-weight:700}
 .modal__media .slider__slide img{cursor:zoom-in}
 
 /* ===== 여러 장 사진 고르기 ===== */
@@ -385,3 +385,27 @@ button{font-family:inherit}
 .pthumb__btn:hover{background:var(--g200)}
 .pthumb__btn[disabled]{opacity:.35;cursor:default}
 .pthumb__btn svg{width:18px;height:18px}
+
+/* ===== 공유 ===== */
+.header__actions{display:flex;gap:8px;align-items:center}
+.share-btn svg{margin-right:2px}
+.btn--icon{width:56px;padding:0;flex:0 0 56px}
+@media (max-width:760px){.btn--icon{width:56px}}
+
+/* ===== 통계 ===== */
+.stats-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.stat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.stat-card{padding:20px;border-radius:20px;background:#fff;display:flex;flex-direction:column;gap:6px}
+.stat-card__num{font-size:28px;line-height:36px;font-weight:800;letter-spacing:-.6px;font-variant-numeric:tabular-nums}
+.stat-table-wrap{overflow-x:auto;border-radius:20px;background:#fff}
+.stat-table{width:100%;border-collapse:collapse;font-size:15px;line-height:23px}
+.stat-table th{text-align:left;padding:14px 20px;font-size:13px;color:var(--g700);font-weight:700;border-bottom:1px solid var(--g100);white-space:nowrap}
+.stat-table td{padding:14px 20px;border-bottom:1px solid var(--g100)}
+.stat-table tr:last-child td{border-bottom:0}
+.stat-table .num,.stat-table th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stat-days{display:flex;flex-direction:column;gap:8px;padding:20px;border-radius:20px;background:#fff}
+.stat-day{display:grid;grid-template-columns:48px 1fr 52px;gap:12px;align-items:center}
+.stat-day__bar{height:10px;border-radius:5px;background:var(--g100);overflow:hidden}
+.stat-day__bar i{display:block;height:100%;background:var(--blue);border-radius:5px}
+.stat-day .num{text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:760px){.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stat-card{padding:16px}.stat-card__num{font-size:24px;line-height:32px}.stat-table th,.stat-table td{padding:12px 14px}}

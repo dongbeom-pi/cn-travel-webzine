@@ -76,11 +76,95 @@
   }
 
   // ---------- 탭 ----------
-  var TABS = ["edit", "wait", "done"];
+  var TABS = ["edit", "wait", "done", "stats"];
   function selectTab(t) {
     TABS.forEach(function (x) { $("tab-" + x).setAttribute("aria-selected", String(x === t)); $("pane-" + x).hidden = x !== t; });
   }
-  TABS.forEach(function (t) { $("tab-" + t).addEventListener("click", function () { selectTab(t); }); });
+  TABS.forEach(function (t) { $("tab-" + t).addEventListener("click", function () { selectTab(t); if (t === "stats" && !ST.loaded) loadStats(); }); });
+
+  // ---------- 통계 ----------
+  var ST = { loaded: false, issues: [], cur: null };
+  function loadStats() {
+    $("statBody").textContent = ""; $("statBody").appendChild(el("div", "adm-empty", "통계를 불러오고 있어요…"));
+    return call("stats").then(function (res) {
+      ST.loaded = true; ST.issues = res.issues || [];
+      if (!ST.cur || !ST.issues.some(function (s) { return s.issue === ST.cur; })) ST.cur = ST.issues.length ? ST.issues[0].issue : null;
+      renderStats();
+    }).catch(function (e) {
+      $("statBody").textContent = "";
+      $("statBody").appendChild(el("div", "adm-empty", e.message.indexOf("알 수 없는") > -1 ? "서버를 새 버전으로 배포하면 통계를 볼 수 있어요." : "통계를 불러오지 못했어요. (" + e.message + ")"));
+    });
+  }
+  function pct(a, b) { return b ? Math.round(a / b * 100) + "%" : "0%"; }
+  function issueName(no) { var it = issueOf(no); return no + "호" + (it && it["주차표기"] ? " · " + it["주차표기"] : ""); }
+  function renderStats() {
+    var pick = $("statPick"); pick.textContent = "";
+    ST.issues.forEach(function (s) {
+      var c = el("button", "issue-chip", issueName(s.issue)); c.type = "button";
+      c.setAttribute("aria-pressed", String(s.issue === ST.cur));
+      c.addEventListener("click", function () { ST.cur = s.issue; renderStats(); });
+      pick.appendChild(c);
+    });
+    var body = $("statBody"); body.textContent = "";
+    var s = ST.issues.filter(function (x) { return x.issue === ST.cur; })[0];
+    if (!s) { body.appendChild(el("div", "adm-empty", "아직 기록된 방문이 없어요. 웹진을 공개하고 링크를 보내면 여기에 쌓여요.")); return; }
+    var grid = el("div", "stat-grid");
+    [["방문", s.views + "회"], ["방문자", s.visitors + "명"], ["문의 버튼", s.inquiry + "회"], ["공유", s.share + "회"],
+     ["휴대폰 비율", pct(s.mobile, s.views)], ["공유 링크로 방문", s.viaShare + "회"]].forEach(function (k) {
+      var c = el("div", "stat-card"); c.appendChild(el("span", "t-cap c-sub", k[0])); c.appendChild(el("strong", "stat-card__num", k[1])); grid.appendChild(c);
+    });
+    body.appendChild(grid);
+
+    var sec = el("div", "ed-sec");
+    sec.appendChild(el("h2", "ed-sec__title", "상품별 반응"));
+    if (!s.products.length) sec.appendChild(el("div", "adm-empty", "아직 상품을 눌러본 기록이 없어요."));
+    else {
+      var wrap = el("div", "stat-table-wrap");
+      var t = el("table", "stat-table");
+      var hd = el("tr"); ["상품", "열어본 수", "문의 버튼", "안내 이미지"].forEach(function (h) { var th = el("th", "", h); th.scope = "col"; hd.appendChild(th); });
+      var thead = el("thead"); thead.appendChild(hd); t.appendChild(thead);
+      var tb = el("tbody");
+      s.products.forEach(function (p) {
+        var tr = el("tr");
+        tr.appendChild(el("td", "", p.name || p.target));
+        [p.clicks, p.inquiry, p.guide].forEach(function (v) { tr.appendChild(el("td", "num", String(v))); });
+        tb.appendChild(tr);
+      });
+      t.appendChild(tb); wrap.appendChild(t); sec.appendChild(wrap);
+    }
+    body.appendChild(sec);
+
+    if (s.days.length) {
+      var ds = el("div", "ed-sec");
+      ds.appendChild(el("h2", "ed-sec__title", "날짜별 방문"));
+      var max = Math.max.apply(null, s.days.map(function (d) { return d.views; }));
+      var list = el("div", "stat-days");
+      s.days.slice(-14).forEach(function (d) {
+        var row = el("div", "stat-day");
+        row.appendChild(el("span", "t-cap c-mid", d.day.slice(5).replace("-", "/")));
+        var bar = el("span", "stat-day__bar"); var fill = el("i"); fill.style.width = Math.max(4, d.views / max * 100) + "%"; bar.appendChild(fill);
+        row.appendChild(bar); row.appendChild(el("span", "t-cap num", d.views + "회"));
+        list.appendChild(row);
+      });
+      ds.appendChild(list); body.appendChild(ds);
+    }
+  }
+  function wsrText(s) {
+    var top = s.products.slice(0, 3).map(function (p, i) { return "  " + (i + 1) + ". " + (p.name || p.target) + " (열람 " + p.clicks + " · 문의 " + p.inquiry + ")"; }).join("\n");
+    return "[씨앤 트래블 매거진 " + issueName(s.issue) + "]\n" +
+      "- 방문 " + s.views + "회 / 방문자 " + s.visitors + "명 (휴대폰 " + pct(s.mobile, s.views) + ")\n" +
+      "- 문의 버튼 " + s.inquiry + "회 / 공유 " + s.share + "회 / 공유 링크 유입 " + s.viaShare + "회\n" +
+      (top ? "- 반응 좋은 상품\n" + top : "- 상품 반응 없음");
+  }
+  $("statReload").addEventListener("click", function () { var d = busy(this, "불러오는 중…"); loadStats().then(d, d); });
+  $("statCopy").addEventListener("click", function () {
+    var s = ST.issues.filter(function (x) { return x.issue === ST.cur; })[0];
+    if (!s) { toast("복사할 통계가 아직 없어요"); return; }
+    var text = wsrText(s);
+    (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject())
+      .then(function () { toast("WSR용 요약을 복사했어요"); })
+      .catch(function () { window.prompt("아래 내용을 복사해 주세요", text); });
+  });
 
   // ---------- 그리기 ----------
   function render() {
