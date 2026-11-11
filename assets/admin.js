@@ -525,7 +525,7 @@
     W.slider($("vMedia"), W.photos(s.photo), { alt: s.title });
     var c = $("vChips"); c.textContent = ""; if (s.category) c.appendChild(el("span", "chip", s.category));
     $("vTitle").textContent = s.title; $("vSummary").textContent = s.summary;
-    $("vPrice").textContent = W.price(s.price); W.renderDetail($("vDetail"), s.detail);
+    $("vPrice").textContent = W.price(s.price); W.renderDetail($("vDetail"), s.detail, { imagesFirst: true });
     var a = $("vAttach"); a.textContent = ""; a.style.marginTop = "16px";
     W.list(s.attachments).forEach(function (u) { var i = el("img"); i.src = u; i.alt = "안내 이미지"; a.appendChild(i); });
     var m = $("vMeta"); m.textContent = "";

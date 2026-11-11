@@ -406,6 +406,16 @@
       if (t) box.appendChild(el("p", "rd-p rd-pre", t));
       return;
     }
+    if (o.imagesFirst) {
+      // 사진을 글보다 먼저: 본문 사진을 모두 위로 모으고(쓴 순서대로), 글은 그 아래에
+      var ims = [], rest = [];
+      d.blocks.forEach(function (b) {
+        if (b.t === "img") ims.push({ t: "img", src: b.src, cap: b.cap, align: b.align === "center" ? "center" : "full" });
+        else if (b.t === "img2") ims.push(b);
+        else rest.push(b);
+      });
+      d = { blocks: ims.concat(rest) };
+    }
     var all = [];
     function pic(u, alt) {
       var s = picSrc(u); if (!s) return null;

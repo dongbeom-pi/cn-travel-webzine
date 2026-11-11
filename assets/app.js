@@ -189,7 +189,7 @@
     $("modalTitle").textContent = p["상품명"];
     $("modalSummary").textContent = p["한줄설명"];
     $("modalPrice").textContent = W.price(p["가격"]);
-    W.renderDetail($("modalDetail"), p["상세설명"], { onImg: function (list, i, b) { openViewer(list, i, b); } });
+    W.renderDetail($("modalDetail"), p["상세설명"], { imagesFirst: true, onImg: function (list, i, b) { openViewer(list, i, b); } });
 
     var info = $("modalInfo"); info.textContent = "";
     var d = W.deadline(p["마감일"]);

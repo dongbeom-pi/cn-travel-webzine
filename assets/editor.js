@@ -15,7 +15,7 @@
   };
   var COLORS = [["", "기본", "#191F28"], ["tx-blue", "파랑", "#0072B9"], ["tx-red", "빨강", "#BE2A30"], ["tx-gray", "회색", "#5F6A77"]];
   var SIZES = [["tx-lg", "크게"], ["", "보통"], ["tx-sm", "작게"]];
-  var ALIGN = [["full", "전체 폭"], ["center", "가운데"], ["left", "왼쪽"], ["right", "오른쪽"]];
+  var ALIGN = [["full", "크게"], ["center", "작게"]];
   var INLINE = { "#text": 1, B: 1, STRONG: 1, I: 1, EM: 1, U: 1, SPAN: 1, FONT: 1, A: 1, BR: 1, SMALL: 1, SUB: 1, SUP: 1, MARK: 1, CODE: 1 };
 
   function btn(cls, html, label, fn) {
@@ -63,7 +63,7 @@
     var picInput = el("input"); picInput.type = "file"; picInput.accept = "image/*"; picInput.multiple = true; picInput.setAttribute("aria-label", "사진 넣기");
     picBtn.appendChild(picInput); bar.appendChild(picBtn);
     bar.appendChild(btn("re-tool", "지우기", "꾸밈 지우기", clearFormat));
-    var hint = el("span", "re-bar__hint", "글자를 고른 뒤 꾸미기를 눌러요 · 사진을 누르면 위치를 바꿀 수 있어요");
+    var hint = el("span", "re-bar__hint", "글자를 고른 뒤 꾸미기를 눌러요 · 사진은 상세 화면에서 글 위에 모아서 보여요");
     bar.appendChild(hint);
     head.appendChild(bar);
 
@@ -86,7 +86,7 @@
     // 사진 메뉴 (사진을 누르면 나와요)
     var pop = el("div", "re-pop"); pop.hidden = true; pop.setAttribute("role", "toolbar"); pop.setAttribute("aria-label", "사진 설정");
     var popAlign = el("div", "re-pop__row");
-    ALIGN.forEach(function (a) { popAlign.appendChild(btn("re-pop__btn", a[1], "사진 위치 " + a[1], function () { if (selFig) { selFig.dataset.align = a[0]; syncPop(); changed(); } })); });
+    ALIGN.forEach(function (a) { popAlign.appendChild(btn("re-pop__btn", a[1], "사진 크기 " + a[1], function () { if (selFig) { selFig.dataset.align = a[0]; syncPop(); changed(); } })); });
     pop.appendChild(popAlign);
     var popRow2 = el("div", "re-pop__row");
     var capIn = el("input", "input re-pop__cap"); capIn.placeholder = "사진 설명 (선택)"; capIn.maxLength = 60; capIn.setAttribute("aria-label", "사진 설명");
@@ -545,7 +545,7 @@
     function refresh() {
       doc.classList.toggle("is-empty", isEmpty() && doc.childNodes.length <= 1);
       count.textContent = "본문 사진 " + imageCount() + " / " + maxImages + "장";
-      if (!prev.hidden) W.renderDetail(prev, get({ preview: true }).doc);
+      if (!prev.hidden) W.renderDetail(prev, get({ preview: true }).doc, { imagesFirst: true });
     }
 
     set("");
