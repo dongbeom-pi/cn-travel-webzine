@@ -4,9 +4,9 @@
 
 | 페이지 | 주소 | 누가 쓰나요 |
 |---|---|---|
-| 웹진 | https://dongbeom-pi.github.io/cn-travel-webzine/ | 고객 |
-| 상품 올리기 | https://dongbeom-pi.github.io/cn-travel-webzine/submit.html | 각 부서·파트 |
-| 관리자 | https://dongbeom-pi.github.io/cn-travel-webzine/admin.html | 편집 담당자 |
+| 웹진 | https://cn-travel-magazine.vercel.app/ | 고객 |
+| 상품 올리기 | https://cn-travel-magazine.vercel.app/submit.html | 각 부서·파트 |
+| 관리자 | https://cn-travel-magazine.vercel.app/admin.html | 편집 담당자 |
 
 - 공개 입력 시트: [씨앤 트래블 매거진 입력 시트](https://docs.google.com/spreadsheets/d/1cX8qUQQuWU_UVcfqlo02rFAIOf8pbigKT226uemzgZg/edit)
 - 접수 내역(담당자 연락처 포함)은 Apps Script가 만든 **비공개 시트**에 따로 쌓여요.
@@ -24,7 +24,7 @@
 ## 부서에 보내는 안내 문구 (복사해서 쓰세요)
 
 > 웹진에 실을 상품은 아래 링크에서 올려주세요. 5단계로 나눠져 있고, 오른쪽에서 웹진에 보일 모습을 바로 확인할 수 있어요.
-> https://dongbeom-pi.github.io/cn-travel-webzine/submit.html
+> https://cn-travel-magazine.vercel.app/submit.html
 >
 > - 대표 사진은 글자 없는 가로 사진 1장이 가장 예뻐요. (무료 사진: pexels.com)
 > - 전단지·안내문은 "안내 이미지" 칸에 넣어주시면 상세 화면에 함께 나와요.

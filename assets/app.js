@@ -45,7 +45,10 @@
     clearTimeout(toast._t); toast._t = setTimeout(function () { t.hidden = true; }, 2400);
   }
   function shareUrl(productId) {
-    var base = location.origin + location.pathname.replace(/index\.html$/, "");
+    // 공유 링크는 항상 대표 주소(canonical)로 — 예전 주소로 들어온 사람이 공유해도 새 주소로 나가요
+    var can = document.querySelector('link[rel="canonical"]');
+    var local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+    var base = can && !local ? can.href : location.origin + location.pathname.replace(/index\.html$/, "");
     return base + "?no=" + CUR.no + (productId ? "&p=" + encodeURIComponent(productId) : "") + "&ref=share";
   }
   function copyText(text) {
