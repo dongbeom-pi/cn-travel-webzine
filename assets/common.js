@@ -152,6 +152,16 @@
   // 사진 칸(쉼표로 여러 장)에서 주소 목록 / 첫 장
   function photos(v) { return list(v).map(imgSrc).filter(Boolean); }
   function firstImg(v) { return photos(v)[0] || ""; }
+  // 목록·썸네일용 작은 사진 주소 (구글 드라이브·Pexels·Unsplash는 주소로 크기를 줄일 수 있어요)
+  function sized(u, w) {
+    u = String(u || "");
+    if (/googleusercontent\.com\/d\//.test(u)) return u.replace(/=[^/]*$/, "") + "=w" + w;
+    if (/images\.(pexels|unsplash)\.com/.test(u)) {
+      u = u.replace(/([?&])w=\d+/, "$1w=" + w);
+      return /[?&]w=/.test(u) ? u : u + (u.indexOf("?") < 0 ? "?" : "&") + "w=" + w;
+    }
+    return u;
+  }
 
   var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var SVG = {
@@ -444,7 +454,7 @@
   window.WZ = {
     CFG: CFG, loadSheet: loadSheet, api: api, num: num, safeUrl: safeUrl, imgSrc: imgSrc,
     price: price, deadline: deadline, el: el, media: media, list: list, resizeImage: resizeImage,
-    photos: photos, firstImg: firstImg, slider: slider, photoSet: photoSet,
+    photos: photos, firstImg: firstImg, sized: sized, slider: slider, photoSet: photoSet,
     parseDoc: parseDoc, renderDetail: renderDetail, docText: docText, docImages: docImages,
     sanitizeInline: sanitizeInline, inlineHtml: inlineHtml, linkHref: linkHref, picSrc: picSrc
   };

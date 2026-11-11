@@ -201,7 +201,7 @@
     $("editor").hidden = !it; $("editorEmpty").hidden = !!it;
     if (!it) return;
     var no = S.cur, pub = it["공개"] === "Y";
-    W.media($("edCoverThumb"), W.firstImg(it["커버사진"]), "");
+    W.media($("edCoverThumb"), W.sized(W.firstImg(it["커버사진"]), 400), "");
     var ch = $("edCoverChips"); ch.textContent = "";
     ch.appendChild(el("span", "chip " + (pub ? "chip--green" : "chip--gray"), pub ? "공개 중" : "비공개"));
     ch.appendChild(el("span", "chip chip--gray", no + "호" + (it["주차표기"] ? " · " + it["주차표기"] : "")));
@@ -216,7 +216,7 @@
 
     rows($("edProducts"), ps, "상품", "아직 실린 상품이 없어요. 접수함에서 싣거나 직접 추가해 주세요.", function (p) {
       var r = el("article", "adm-item");
-      var th = el("div", "adm-item__thumb"); W.media(th, W.firstImg(p["사진"]), ""); r.appendChild(th);
+      var th = el("div", "adm-item__thumb"); W.media(th, W.sized(W.firstImg(p["사진"]), 400), ""); r.appendChild(th);
       var m = el("div", "adm-item__meta");
       var c = el("div", "chips");
       if (p["카테고리"]) c.appendChild(el("span", "chip", p["카테고리"]));
@@ -327,6 +327,54 @@
     call("saveIssue", { issue: data, isNew: issueMode === "new", photos: coverSet.payload() })
       .then(function () { closeModal("issueModal"); S.cur = no; selectTab("edit"); toast(no + "호를 저장했어요"); return load(); })
       .catch(function (e) { showErr("iError", e.message); }).then(done);
+  });
+
+  // ---------- 안내 메일 ----------
+  var mail = null;
+  var SITE = (document.querySelector('link[rel="canonical"]') || {}).href || "https://cn-travel-magazine.vercel.app/";
+  $("edMail").addEventListener("click", function () {
+    var it = issueOf(S.cur); if (!it) return;
+    var ps = ofIssue(S.products, S.cur);
+    mail = W.buildMail({ issue: it, products: ps, base: SITE });
+    $("mSubject").value = mail.subject;
+    var warn = [];
+    if (it["공개"] !== "Y") warn.push("아직 비공개인 호예요. 공개한 뒤에 보내야 받는 분이 웹진을 볼 수 있어요.");
+    if (!ps.length) warn.push("이 호에 상품이 없어요.");
+    $("mWarn").textContent = warn.join(" "); $("mWarn").hidden = !warn.length;
+    $("mFrame").srcdoc = mail.html;
+    openModal("mailModal");
+  });
+  function copyRich(html, text) {
+    if (navigator.clipboard && window.ClipboardItem) {
+      return navigator.clipboard.write([new ClipboardItem({
+        "text/html": new Blob([html], { type: "text/html" }),
+        "text/plain": new Blob([text], { type: "text/plain" })
+      })]);
+    }
+    return new Promise(function (res, rej) {   // 예전 브라우저: 미리보기를 선택해서 복사
+      try {
+        var d = $("mFrame").contentDocument, r = d.createRange(); r.selectNodeContents(d.body);
+        var sel = d.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+        d.execCommand("copy") ? res() : rej(new Error("copy")); sel.removeAllRanges();
+      } catch (e) { rej(e); }
+    });
+  }
+  function copyPlain(t) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+    return new Promise(function (res, rej) {
+      var ta = el("textarea"); ta.value = t; $("mailModal").appendChild(ta); ta.select();
+      try { document.execCommand("copy") ? res() : rej(); } catch (e) { rej(e); } finally { ta.remove(); }
+    });
+  }
+  $("mCopySubject").addEventListener("click", function () { copyPlain(mail.subject).then(function () { toast("제목을 복사했어요"); }); });
+  $("mCopyBody").addEventListener("click", function () {
+    copyRich(mail.body, mail.text).then(function () { toast("본문을 복사했어요. 메일 쓰기 화면에 붙여넣으세요"); },
+      function () { toast("복사하지 못했어요. 미리보기를 길게 눌러 전체 선택 후 복사해 주세요"); });
+  });
+  $("mCopyCode").addEventListener("click", function () { copyPlain(mail.html).then(function () { toast("HTML 코드를 복사했어요"); }); });
+  $("mDownload").addEventListener("click", function () {
+    var a = el("a"); a.href = URL.createObjectURL(new Blob([mail.html], { type: "text/html" }));
+    a.download = "CTM-" + S.cur + "호-안내메일.html"; document.body.appendChild(a); a.click(); a.remove();
   });
 
   // ---------- 상품 ----------
@@ -451,7 +499,7 @@
     if (!items.length) { box.appendChild(el("div", "adm-empty", empty)); return; }
     items.forEach(function (s) {
       var r = el("article", "adm-item");
-      var th = el("div", "adm-item__thumb"); W.media(th, W.firstImg(s.photo), ""); r.appendChild(th);
+      var th = el("div", "adm-item__thumb"); W.media(th, W.sized(W.firstImg(s.photo), 400), ""); r.appendChild(th);
       var m = el("div", "adm-item__meta");
       var c = el("div", "chips");
       if (s.category) c.appendChild(el("span", "chip", s.category));

@@ -103,7 +103,7 @@
       card.setAttribute("aria-haspopup", "dialog");
       var m = el("span", "card__media");
       var pics = W.photos(p["사진"]);
-      W.media(m, pics[0] || "", p["상품명"]);
+      W.media(m, W.sized(pics[0] || "", 800), p["상품명"]);
       if (pics.length > 1) m.appendChild(el("span", "card__count", "사진 " + pics.length));
       card.appendChild(m);
       var c = el("span", "card__chips"); chips(c, p, true); card.appendChild(c);
@@ -154,7 +154,7 @@
     others.forEach(function (it) {
       var a = el("a");
       a.href = "?no=" + num(it["호수"]) + (PREVIEW ? "&preview=1" : "");
-      var th = el("span", "archive__thumb"); W.media(th, W.firstImg(it["커버사진"]), "");
+      var th = el("span", "archive__thumb"); W.media(th, W.sized(W.firstImg(it["커버사진"]), 400), "");
       var tx = el("span");
       tx.appendChild(el("span", "archive__meta t-cap c-sub", issueLabel(it)));
       tx.appendChild(el("span", "archive__title", it["커버제목"]));
