@@ -333,6 +333,7 @@
   var prod = { id: "", attach: [], newAttach: [] };
   var prodSet = W.photoSet({ thumbs: $("pPhotoThumb"), drop: $("pPhotoDrop"), input: $("pPhoto"), urlInput: $("pPhotoUrl"), max: 5,
     onError: function (m) { showErr("pError", m); } });
+  var detailEd = W.richEditor($("pDetail"), { maxImages: 10, onError: function (m) { showErr("pError", m); } });
   function issueOptions(sel, cur) {
     sel.textContent = "";
     S.issues.forEach(function (it) {
@@ -352,7 +353,7 @@
     $("pPrice").value = p ? String(p["가격"] || "").replace(/[^0-9]/g, "") : "";
     var d = p && String(p["마감일"] || "").match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
     $("pDeadline").value = d ? d[1] + "-" + ("0" + d[2]).slice(-2) + "-" + ("0" + d[3]).slice(-2) : "";
-    $("pDetail").value = p ? p["상세설명"] || "" : "";
+    detailEd.set(p ? p["상세설명"] || "" : ""); detailEd.showEdit();
     $("pLink").value = p ? p["링크"] || "" : "";
     $("pTitle").textContent = p ? "상품 고치기" : "상품 추가";
     $("pError").hidden = true;
@@ -375,17 +376,20 @@
     var row = {
       id: prod.id, "호수": $("pIssue").value, "카테고리": $("pCat").value.trim(), "상품명": $("pName").value.trim(),
       "한줄설명": $("pSummary").value.trim(), "가격": $("pPrice").value.replace(/[^0-9]/g, ""), "마감일": $("pDeadline").value,
-      "상세설명": $("pDetail").value.trim(), "링크": $("pLink").value.trim(),
+      "링크": $("pLink").value.trim(),
       "첨부이미지": prod.attach.join(", ")
     };
     if (!num(row["호수"])) return showErr("pError", "실을 호를 골라주세요. 호가 없으면 먼저 만들어 주세요.");
     if (!row["상품명"]) return showErr("pError", "상품명을 써주세요.");
     if (row["링크"] && !W.safeUrl(row["링크"])) return showErr("pError", "예약·문의 받을 곳은 이메일이나 https:// 링크로 써주세요.");
+    var bad = detailEd.validate(); if (bad) return showErr("pError", bad);
+    var dg = detailEd.get(); row["상세설명"] = dg.doc;
+    if (W.docText(dg.doc).length > 3000) return showErr("pError", "자세한 설명은 3000자 이내로 줄여주세요.");
     if (!prod.id) row["순서"] = "";
     var done = busy(this);
     call("saveRow", {
       table: "상품", row: row,
-      photos: prodSet.payload(),
+      photos: prodSet.payload(), detailImages: dg.images,
       attachments: prod.newAttach.map(function (a) { return { name: a.name, data: a.data }; })
     }).then(function () { closeModal("productModal"); S.cur = num(row["호수"]); toast("상품을 저장했어요"); return load(); })
       .catch(function (e) { showErr("pError", e.message); }).then(done);
@@ -473,7 +477,7 @@
     W.slider($("vMedia"), W.photos(s.photo), { alt: s.title });
     var c = $("vChips"); c.textContent = ""; if (s.category) c.appendChild(el("span", "chip", s.category));
     $("vTitle").textContent = s.title; $("vSummary").textContent = s.summary;
-    $("vPrice").textContent = W.price(s.price); $("vDetail").textContent = s.detail;
+    $("vPrice").textContent = W.price(s.price); W.renderDetail($("vDetail"), s.detail);
     var a = $("vAttach"); a.textContent = ""; a.style.marginTop = "16px";
     W.list(s.attachments).forEach(function (u) { var i = el("img"); i.src = u; i.alt = "안내 이미지"; a.appendChild(i); });
     var m = $("vMeta"); m.textContent = "";

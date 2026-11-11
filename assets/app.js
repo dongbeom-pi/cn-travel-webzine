@@ -52,7 +52,7 @@
     if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
     return new Promise(function (res, rej) {
       var ta = el("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
-      document.body.appendChild(ta); ta.select();
+      (document.querySelector("dialog[open]") || document.body).appendChild(ta); ta.select();
       try { document.execCommand("copy") ? res() : rej(); } catch (e) { rej(e); } finally { ta.remove(); }
     });
   }
@@ -164,7 +164,7 @@
 
   // ---------- 상세 팝업 ----------
   var modal = $("productModal"), lastFocus = null;
-  var curProduct = null;
+  var curProduct = null, curMail = "";
   function openProduct(p, from) {
     lastFocus = from; curProduct = p;
     track("product", p.id || p["상품명"], p["상품명"]);
@@ -174,7 +174,7 @@
     $("modalTitle").textContent = p["상품명"];
     $("modalSummary").textContent = p["한줄설명"];
     $("modalPrice").textContent = W.price(p["가격"]);
-    $("modalDetail").textContent = p["상세설명"];
+    W.renderDetail($("modalDetail"), p["상세설명"], { onImg: function (list, i, b) { openViewer(list, i, b); } });
 
     var info = $("modalInfo"); info.textContent = "";
     var d = W.deadline(p["마감일"]);
@@ -201,10 +201,19 @@
     $("modalAttach").hidden = !files.length;
 
     var u = W.safeUrl(p["링크"]);
-    $("modalLink").hidden = !u;
-    if (u) {
-      $("modalLink").href = u;
-      $("modalLink").textContent = /^mailto:/i.test(u) ? "메일로 문의하기" : "예약 · 문의하기";
+    var link = $("modalLink");
+    curMail = /^mailto:/i.test(u) ? decodeURIComponent(u.replace(/^mailto:/i, "").split("?")[0]) : "";
+    link.hidden = !u;
+    if (curMail) {
+      link.removeAttribute("href"); link.removeAttribute("target"); link.setAttribute("role", "button"); link.tabIndex = 0;
+      link.textContent = "메일 주소 복사";
+      var mrow = el("div", "infobox__mail");
+      mrow.appendChild(el("dt", "", "문의 메일"));
+      mrow.appendChild(el("dd", "", curMail));
+      info.appendChild(mrow); info.hidden = false;
+    } else if (u) {
+      link.href = u; link.target = "_blank"; link.removeAttribute("role"); link.removeAttribute("tabindex");
+      link.textContent = "예약 · 문의하기";
     }
     modal.querySelector(".modal__scroll").scrollTop = 0;
     if (modal.showModal) modal.showModal(); else modal.setAttribute("open", "");
@@ -213,9 +222,16 @@
     if (!curProduct) return;
     share(curProduct["상품명"], curProduct["한줄설명"] || CUR.title, shareUrl(curProduct.id), curProduct.id);
   });
-  $("modalLink").addEventListener("click", function () {
+  function inquire(e) {
     if (curProduct) track("inquiry", curProduct.id || curProduct["상품명"], curProduct["상품명"]);
-  });
+    if (curMail) {
+      e.preventDefault();
+      copyText(curMail).then(function () { toast("메일 주소를 복사했어요. " + curMail); },
+        function () { toast(curMail); });
+    }
+  }
+  $("modalLink").addEventListener("click", inquire);
+  $("modalLink").addEventListener("keydown", function (e) { if (curMail && (e.key === "Enter" || e.key === " ")) inquire(e); });
   $("attachToggle").addEventListener("click", function () {
     var open = $("attachList").hidden;
     if (open && curProduct) track("guide", curProduct.id || curProduct["상품명"], curProduct["상품명"]);

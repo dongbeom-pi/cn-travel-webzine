@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex">
 <link rel="icon" href="images/cn-symbol.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="assets/style.css?v=20261111c">
+<link rel="stylesheet" href="assets/style.css?v=20261111e">
 </head>
 <body class="form-page">
 <div class="page">
@@ -78,10 +78,6 @@
             <input class="input" id="summary" name="summary" placeholder="예) 서류만 보내주시면 등록까지 대신 해드려요" required>
           </div>
           <div class="field">
-            <div class="field__row"><label class="field__label" for="detail">자세한 설명<em>필수</em></label><span class="field__count" data-count="detail" data-max="400"></span></div>
-            <textarea class="textarea" id="detail" name="detail" required placeholder="상품을 눌렀을 때 나오는 설명이에요. 아래 순서로 3~5줄이면 충분해요.&#10;① 어떤 상품인지&#10;② 누구에게 좋은지&#10;③ 신청 방법이나 일정"></textarea>
-          </div>
-          <div class="field">
             <label class="field__label" for="price">가격</label>
             <input class="input" id="price" name="price" inputmode="numeric" placeholder="숫자만 입력해 주세요. 예) 225000">
             <label class="check"><input type="checkbox" id="priceAsk" name="priceAsk"> 가격은 문의로 받을게요</label>
@@ -91,6 +87,11 @@
             <input class="input" id="deadline" name="deadline" type="date">
             <span class="field__hint">마감이 7일 이내로 남으면 카드에 D-day가 붙어요.</span>
           </div>
+          <div class="field" id="detailField">
+            <span class="field__label" id="detailLabel">자세한 설명<em>필수</em></span>
+            <span class="field__hint">상품을 눌렀을 때 나오는 본문이에요. 글·소제목·사진·버튼을 넣고 순서를 자유롭게 바꿀 수 있어요. 처음이라면 ① 어떤 상품인지 ② 누구에게 좋은지 ③ 신청 방법이나 일정 순서로 써보세요.</span>
+            <div id="detailEditor" aria-labelledby="detailLabel"></div>
+          </div>
         </section>
 
         <!-- 4단계 -->
@@ -99,7 +100,7 @@
           <p class="step__desc">대표 사진은 글자가 없는 가로 사진이 가장 예쁘게 보여요. 전단지나 안내문은 아래 안내 이미지에 넣어주세요.</p>
           <div class="field">
             <span class="field__label" id="photoLabel">상품 사진<em>필수</em></span>
-            <span class="field__hint">1장은 꼭 넣어주세요. 최대 5장까지 넣으면 상세 화면에서 넘겨볼 수 있어요. 첫 번째 사진이 대표 사진이에요.</span>
+            <span class="field__hint">1장은 꼭 넣어주세요. 최대 5장까지 넣으면 상세 화면에서 넘겨볼 수 있어요. 첫 번째 사진이 대표 사진이에요. 끌거나 화살표로 순서를 바꿀 수 있어요.</span>
             <div class="thumbs" id="photoThumb"></div>
             <label class="upload" id="photoDrop">
               <input type="file" id="photo" accept="image/*" multiple aria-labelledby="photoLabel">
@@ -187,8 +188,9 @@
   </main>
 </div>
 
-<script src="config.js?v=20261111c"></script>
-<script src="assets/common.js?v=20261111c"></script>
-<script src="assets/submit.js?v=20261111c"></script>
+<script src="config.js?v=20261111e"></script>
+<script src="assets/common.js?v=20261111e"></script>
+<script src="assets/editor.js?v=20261111e"></script>
+<script src="assets/submit.js?v=20261111e"></script>
 </body>
 </html>

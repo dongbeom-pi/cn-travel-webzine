@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex">
 <link rel="icon" href="images/cn-symbol.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="assets/style.css?v=20261111c">
+<link rel="stylesheet" href="assets/style.css?v=20261111e">
 </head>
 <body class="form-page">
 <div class="page">
@@ -130,10 +130,10 @@
       <div class="field span2"><div class="field__row"><label class="field__label" for="pSummary">한 줄 설명</label><span class="field__count" data-count="pSummary" data-max="30"></span></div><input class="input" id="pSummary"></div>
       <div class="field"><label class="field__label" for="pPrice">가격 (숫자만)</label><input class="input" id="pPrice" inputmode="numeric" placeholder="비우면 '가격은 문의해 주세요'"></div>
       <div class="field"><label class="field__label" for="pDeadline">신청 마감일</label><input class="input" id="pDeadline" type="date"></div>
-      <div class="field span2"><label class="field__label" for="pDetail">자세한 설명</label><textarea class="textarea" id="pDetail" style="min-height:140px"></textarea></div>
+      <div class="field span2"><span class="field__label" id="pDetailLabel">자세한 설명</span><span class="field__hint">글·소제목·사진·버튼을 넣고, 끌거나 화살표로 순서를 바꿀 수 있어요.</span><div id="pDetail" aria-labelledby="pDetailLabel"></div></div>
       <div class="field span2">
         <span class="field__label" id="pPhotoLabel">상품 사진 (최대 5장)</span>
-        <span class="field__hint">첫 번째 사진이 카드에 보이는 대표 사진이에요. 화살표로 순서를 바꿀 수 있어요.</span>
+        <span class="field__hint">첫 번째 사진이 카드에 보이는 대표 사진이에요. 끌거나 화살표로 순서를 바꿀 수 있어요.</span>
         <div class="thumbs" id="pPhotoThumb"></div>
         <label class="upload" id="pPhotoDrop" style="min-height:110px"><input type="file" id="pPhoto" accept="image/*" multiple aria-labelledby="pPhotoLabel"><strong>사진 추가하기</strong><span>여러 장을 한 번에 골라도 돼요</span></label>
         <input class="input" id="pPhotoUrl" placeholder="또는 사진 주소(https://…)를 붙여넣고 Enter">
@@ -211,7 +211,7 @@
     <h3 class="modal__title" id="vTitle"></h3>
     <p class="modal__summary t-body" id="vSummary"></p>
     <p class="modal__price" id="vPrice"></p>
-    <p class="modal__detail t-body" id="vDetail"></p>
+    <div class="modal__detail t-body" id="vDetail"></div>
     <div class="attach__list" id="vAttach"></div>
     <dl class="review" id="vMeta" style="margin-top:20px"></dl>
   </div>
@@ -257,8 +257,9 @@
 
 <div class="toast" id="toast" role="status" hidden></div>
 
-<script src="config.js?v=20261111c"></script>
-<script src="assets/common.js?v=20261111c"></script>
-<script src="assets/admin.js?v=20261111c"></script>
+<script src="config.js?v=20261111e"></script>
+<script src="assets/common.js?v=20261111e"></script>
+<script src="assets/editor.js?v=20261111e"></script>
+<script src="assets/admin.js?v=20261111e"></script>
 </body>
 </html>

@@ -22,7 +22,7 @@
 <meta name="theme-color" content="#FFFFFF">
 <link rel="icon" href="images/cn-symbol.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="assets/style.css?v=20261111c">
+<link rel="stylesheet" href="assets/style.css?v=20261111e">
 </head>
 <body>
 <div class="page">
@@ -105,15 +105,26 @@
   </main>
 
   <footer class="footer">
-    <div class="wrap footer__inner">
-      <div>
-        <p class="t-small" style="font-weight:700;color:var(--g700)">주식회사 씨앤 · 트래블 매거진</p>
-        <p class="t-cap c-sub" style="margin-top:6px">문의 <span data-cfg="contact"></span></p>
+    <div class="wrap">
+      <div class="footer__top">
+        <p class="footer__brand">주식회사 씨앤</p>
+        <div class="footer__links">
+          <a class="footer__btn" href="https://home.cncorp.kr/" target="_blank" rel="noopener">CN 홈페이지</a>
+          <a class="footer__btn" href="https://biz.cncorp.kr/" target="_blank" rel="noopener">비즈센터</a>
+        </div>
       </div>
-      <div style="display:flex;gap:16px;align-items:center">
-        <a href="submit.html">상품 올리기</a>
-        <a href="admin.html">관리자</a>
+      <div class="footer__contact">
+        <a href="tel:16003630"><b>T.</b> 1600-3630</a>
+        <a href="mailto:biz@cncorp.kr"><b>M.</b> biz@cncorp.kr</a>
+        <span><b>F.</b> 070-7507-3630</span>
       </div>
+      <dl class="footer__info">
+        <div><dt>대표이사</dt><dd>박상용</dd></div>
+        <div><dt>사업자등록번호</dt><dd>602-81-42620</dd></div>
+        <div><dt>통신판매업신고</dt><dd>제 2010-부산중구-0036호</dd></div>
+        <div><dt>주소</dt><dd>부산광역시 남구 남동천로 128, 809~812호 (문현동, BIFC2)</dd></div>
+      </dl>
+      <p class="footer__copy">© 2026 주식회사 씨앤. All rights reserved.</p>
     </div>
   </footer>
 </div>
@@ -128,7 +139,7 @@
     <p class="modal__summary t-body" id="modalSummary"></p>
     <p class="modal__price" id="modalPrice"></p>
     <dl class="infobox" id="modalInfo" hidden></dl>
-    <p class="modal__detail t-body" id="modalDetail"></p>
+    <div class="modal__detail t-body" id="modalDetail"></div>
     <div class="attach" id="modalAttach" hidden>
       <button class="btn btn--soft btn--block attach__toggle" type="button" id="attachToggle" aria-expanded="false">안내 이미지 보기</button>
       <div class="attach__list" id="attachList" hidden></div>
@@ -159,8 +170,8 @@
 
 <div class="toast" id="toast" role="status" hidden></div>
 
-<script src="config.js?v=20261111c"></script>
-<script src="assets/common.js?v=20261111c"></script>
-<script src="assets/app.js?v=20261111c"></script>
+<script src="config.js?v=20261111e"></script>
+<script src="assets/common.js?v=20261111e"></script>
+<script src="assets/app.js?v=20261111e"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
   var W = window.WZ, el = W.el;
   var $ = function (id) { return document.getElementById(id); };
   var form = $("form"), steps = form.querySelectorAll(".step"), TOTAL = steps.length;
-  var step = 1, attachments = [], sending = false, photoSet = null;
+  var step = 1, attachments = [], sending = false, photoSet = null, editor = null;
   var DRAFT_KEY = "wz-submit-draft";
 
   if (!W.CFG.apiUrl) $("noApi").hidden = false;
@@ -19,19 +19,20 @@
   function data() {
     return {
       dept: val("dept"), name: val("name"), contact: val("contact"),
-      category: category(), title: val("title"), summary: val("summary"), detail: val("detail"),
+      category: category(), title: val("title"), summary: val("summary"), detail: editor ? editor.get({ preview: true }).doc : "",
       price: $("priceAsk").checked ? "" : val("price").replace(/[^0-9]/g, ""),
       deadline: val("deadline"), link: val("link"), wish: val("wish")
     };
   }
 
   // ---------- 임시 저장 (같은 브라우저에서 이어쓰기) ----------
-  var SAVE_IDS = ["dept", "name", "contact", "categoryEtc", "title", "summary", "detail", "price", "deadline", "link", "wish"];
+  var SAVE_IDS = ["dept", "name", "contact", "categoryEtc", "title", "summary", "price", "deadline", "link", "wish"];
   function saveDraft() {
     try {
       var d = {}; SAVE_IDS.forEach(function (id) { d[id] = $(id).value; });
       var c = form.querySelector('input[name="category"]:checked'); d.category = c ? c.value : "";
       d.priceAsk = $("priceAsk").checked;
+      if (editor) d.detail = editor.draft();
       localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
     } catch (e) { /* 저장 불가 환경은 무시 */ }
   }
@@ -42,6 +43,7 @@
       SAVE_IDS.forEach(function (id) { if (d[id]) $(id).value = d[id]; });
       if (d.category) { var r = form.querySelector('input[name="category"][value="' + d.category + '"]'); if (r) r.checked = true; }
       $("priceAsk").checked = !!d.priceAsk;
+      if (d.detail) editor.set(d.detail);
     } catch (e) { /* 무시 */ }
   }
   function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) { /* 무시 */ } }
@@ -108,7 +110,11 @@
     }
     if (n === 3) {
       need("summary", "한 줄 설명을 써주세요"); max("summary", 30, "한 줄 설명");
-      need("detail", "자세한 설명을 써주세요"); max("detail", 400, "자세한 설명");
+      var dt = editor.text(), em = "";
+      if (editor.isEmpty()) em = "자세한 설명을 써주세요";
+      else if (dt.length > 3000) em = "자세한 설명은 3000자 이내로 줄여주세요 (지금 " + dt.length + "자)";
+      else em = editor.validate();
+      if (em) { $("detailEditor").after(el("span", "field__error", em)); $("detailEditor").classList.add("is-error"); first = first || $("detailEditor").querySelector("[contenteditable],.re-add__btn"); }
       if (!$("priceAsk").checked && val("price") && !/^[0-9,]+$/.test(val("price")))
         first = first || fieldError($("price"), "가격은 숫자만 입력해 주세요");
     }
@@ -128,7 +134,7 @@
   function renderReview() {
     var d = data(), r = $("review"); r.textContent = "";
     [["부서 · 담당자", d.dept + " · " + d.name], ["연락처", d.contact], ["카테고리", d.category], ["상품명", d.title],
-     ["한 줄 설명", d.summary], ["자세한 설명", d.detail], ["가격", W.price(d.price)],
+     ["한 줄 설명", d.summary], ["자세한 설명", W.docText(d.detail).slice(0, 300) + (editor.imageCount() ? "\n(본문 사진 " + editor.imageCount() + "장)" : "")], ["가격", W.price(d.price)],
      ["마감일", d.deadline || "없음"], ["사진", (photoSet.count() ? "상품 사진 " + photoSet.count() + "장" : "") + (attachments.length ? " · 안내 이미지 " + attachments.length + "장" : "")]]
       .forEach(function (row) {
         var div = el("div"); div.appendChild(el("dt", "", row[0])); div.appendChild(el("dd", "", row[1])); r.appendChild(div);
@@ -167,6 +173,8 @@
     }
     sending = true; btn.disabled = true; btn.textContent = "보내는 중이에요…";
     var d = data();
+    var g = editor.get();
+    d.detail = g.doc; d.detailImages = g.images;
     d.photos = photoSet.payload();
     d.photo = d.photos[0]; // 이전 버전 서버 호환
     d.attachments = attachments.map(function (a) { return { name: a.name, data: a.data }; });
@@ -232,6 +240,12 @@
     updatePreview(); saveDraft();
   });
 
+  editor = W.richEditor($("detailEditor"), { maxImages: 10,
+    onChange: function () {
+      var er = $("detailField").querySelector(".field__error"); if (er) er.remove();
+      $("detailEditor").classList.remove("is-error"); saveDraft();
+    },
+    onError: function (m) { showErr(m); } });
   loadDraft();
   var etc = form.querySelector('input[name="category"][value="__etc"]');
   $("categoryEtc").hidden = !(etc && etc.checked);

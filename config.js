@@ -11,7 +11,7 @@ window.WEBZINE_CONFIG = {
   title: "씨앤 트래블 매거진",
 
   // 푸터 문의처 (예: "051-792-3333 · PJ@CNCORP.KR")
-  contact: "[문의처]",
+  contact: "T. 1600-3630 · biz@cncorp.kr",
 
   // 사진 폴더 (사진 칸에 파일 이름만 쓴 경우)
   imageFolder: "images/"

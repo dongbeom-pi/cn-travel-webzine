@@ -221,7 +221,7 @@
   // 여러 장 사진 고르기 (관리자·업로드 공용)
   // o: { thumbs, drop, input, urlInput, max, maxW, onChange, onError }
   function photoSet(o) {
-    var items = [], max = o.max || 5;
+    var items = [], max = o.max || 5, dragFrom = -1;
     function render() {
       o.thumbs.textContent = "";
       items.forEach(function (it, i) {
@@ -239,6 +239,16 @@
         mk((i + 1) + "번째 사진 뒤로", SVG.next, function () { swap(i, i + 1); }, i === items.length - 1);
         mk((i + 1) + "번째 사진 지우기", "×", function () { items.splice(i, 1); render(); });
         card.appendChild(bar);
+        card.draggable = true; card.title = "끌어서 순서를 바꿀 수 있어요";
+        card.addEventListener("dragstart", function (e) { dragFrom = i; card.classList.add("is-drag"); e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", ""); } catch (er) { /* 무시 */ } });
+        card.addEventListener("dragend", function () { card.classList.remove("is-drag"); dragFrom = -1; });
+        card.addEventListener("dragover", function (e) { if (dragFrom < 0) return; e.preventDefault(); card.classList.add("is-over"); });
+        card.addEventListener("dragleave", function () { card.classList.remove("is-over"); });
+        card.addEventListener("drop", function (e) {
+          e.preventDefault(); card.classList.remove("is-over");
+          if (dragFrom < 0 || dragFrom === i) return;
+          var it = items.splice(dragFrom, 1)[0]; items.splice(i, 0, it); dragFrom = -1; render();
+        });
         o.thumbs.appendChild(card);
       });
       o.drop.hidden = items.length >= max;
@@ -275,9 +285,152 @@
     };
   }
 
+
+  // ---------- 상세설명 (블록 문서) ----------
+  // 저장 형식: {"v":1,"blocks":[{t:"p",html},{t:"h",text},{t:"img",src,cap,align},{t:"img2",src:[a,b],cap},
+  //            {t:"btn",label,url},{t:"note",html},{t:"list",items:[..]},{t:"hr"}]}  · 예전 글(그냥 글자)도 그대로 보여요
+  var INLINE_CLS = { "tx-blue": 1, "tx-red": 1, "tx-gray": 1, "tx-lg": 1, "tx-sm": 1 };
+  function parseDoc(raw) {
+    if (raw && typeof raw === "object" && Array.isArray(raw.blocks)) return raw;
+    var s = String(raw == null ? "" : raw).trim();
+    if (s.charAt(0) !== "{") return null;
+    try { var d = JSON.parse(s); return d && Array.isArray(d.blocks) ? d : null; } catch (e) { return null; }
+  }
+  function linkHref(u) {
+    u = String(u || "").trim();
+    if (/^https?:\/\//i.test(u) || /^mailto:/i.test(u) || /^tel:/i.test(u)) return u;
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u)) return "mailto:" + u;
+    if (/^www\./i.test(u)) return "https://" + u;
+    return "";
+  }
+  // 허용한 꾸밈(굵게·색·크기·링크·줄바꿈)만 남기고 나머지는 글자로만 살려요
+  function sanitizeInline(html) {
+    var frag = document.createDocumentFragment();
+    var src = new DOMParser().parseFromString("<body>" + String(html || "") + "</body>", "text/html").body;
+    function lastIsBr(out) { var l = out.lastChild; return !l || (l.nodeName === "BR"); }
+    function walk(node, out) {
+      Array.prototype.forEach.call(node.childNodes, function (n) {
+        if (n.nodeType === 3) { out.appendChild(document.createTextNode(n.nodeValue)); return; }
+        if (n.nodeType !== 1) return;
+        var tag = n.nodeName, x;
+        if (tag === "BR") { out.appendChild(document.createElement("br")); return; }
+        if (tag === "B" || tag === "STRONG") { x = document.createElement("b"); walk(n, x); out.appendChild(x); return; }
+        if (tag === "A") {
+          var h = linkHref(n.getAttribute("href"));
+          if (h) { x = document.createElement("a"); x.href = h; x.target = "_blank"; x.rel = "noopener"; walk(n, x); out.appendChild(x); }
+          else walk(n, out);
+          return;
+        }
+        if (tag === "SPAN" || tag === "FONT") {
+          var cls = (n.getAttribute("class") || "").split(/\s+/).filter(function (c) { return INLINE_CLS[c]; });
+          var bold = /font-weight:\s*(bold|[6-9]00)/i.test(n.getAttribute("style") || "");
+          if (cls.length || bold) {
+            x = document.createElement(cls.length ? "span" : "b");
+            if (cls.length) x.className = cls.join(" ");
+            walk(n, x); out.appendChild(x);
+          } else walk(n, out);
+          return;
+        }
+        if (tag === "DIV" || tag === "P" || tag === "LI") {
+          if (out.childNodes.length && !lastIsBr(out)) out.appendChild(document.createElement("br"));
+          walk(n, out); return;
+        }
+        if (tag === "SCRIPT" || tag === "STYLE" || tag === "IFRAME" || tag === "OBJECT") return;
+        walk(n, out);
+      });
+    }
+    walk(src, frag);
+    while (frag.lastChild && frag.lastChild.nodeName === "BR") frag.removeChild(frag.lastChild);
+    return frag;
+  }
+  function inlineHtml(html) { var d = document.createElement("div"); d.appendChild(sanitizeInline(html)); return d.innerHTML; }
+  function inlineText(html) { var d = document.createElement("div"); d.appendChild(sanitizeInline(html)); return d.textContent; }
+  function docText(raw) {
+    var d = parseDoc(raw);
+    if (!d) return String(raw == null ? "" : raw);
+    return d.blocks.map(function (b) {
+      if (b.t === "p" || b.t === "note") return inlineText(b.html);
+      if (b.t === "h") return b.text || "";
+      if (b.t === "list") return (b.items || []).join("\n");
+      if (b.t === "btn") return b.label || "";
+      if (b.t === "img" || b.t === "img2") return b.cap || "";
+      return "";
+    }).join("\n").trim();
+  }
+  function docImages(raw) {
+    var d = parseDoc(raw), out = [];
+    if (d) d.blocks.forEach(function (b) {
+      if (b.t === "img" && b.src) out.push(b.src);
+      if (b.t === "img2") (b.src || []).forEach(function (u) { if (u) out.push(u); });
+    });
+    return out;
+  }
+  function picSrc(u) {
+    u = String(u || "");
+    if (/^data:image\/(jpeg|png|webp|gif);base64,/i.test(u)) return u;
+    if (/^(javascript|data|vbscript):/i.test(u)) return "";
+    return imgSrc(u);
+  }
+  function renderDetail(box, raw, o) {
+    o = o || {};
+    box.textContent = "";
+    box.classList.add("rd");
+    var d = parseDoc(raw);
+    if (!d) {
+      var t = String(raw == null ? "" : raw).trim();
+      if (t) box.appendChild(el("p", "rd-p rd-pre", t));
+      return;
+    }
+    var all = [];
+    function pic(u, alt) {
+      var s = picSrc(u); if (!s) return null;
+      var k = all.length; all.push(s);
+      var img = el("img"); img.src = s; img.alt = alt || ""; img.loading = "lazy"; img.decoding = "async";
+      if (o.onImg) {
+        var b = el("button", "rd-zoom"); b.type = "button"; b.setAttribute("aria-label", "사진 크게 보기");
+        b.appendChild(img); b.addEventListener("click", function () { o.onImg(all, k, b); });
+        return b;
+      }
+      return img;
+    }
+    d.blocks.forEach(function (b) {
+      var n;
+      if (b.t === "p" || b.t === "note") {
+        n = el(b.t === "p" ? "p" : "div", b.t === "p" ? "rd-p" : "rd-note");
+        n.appendChild(sanitizeInline(b.html));
+        if (!n.textContent.trim()) return;
+      } else if (b.t === "h") {
+        if (!b.text) return; n = el("h4", "rd-h", b.text);
+      } else if (b.t === "img") {
+        var p1 = pic(b.src, b.cap); if (!p1) return;
+        var al = { full: 1, center: 1, left: 1, right: 1 }[b.align] ? b.align : "full";
+        n = el("figure", "rd-fig rd-fig--" + al); n.appendChild(p1);
+        if (b.cap) n.appendChild(el("figcaption", "", b.cap));
+      } else if (b.t === "img2") {
+        var ps = (b.src || []).slice(0, 2).map(function (u) { return pic(u, b.cap); }).filter(Boolean);
+        if (!ps.length) return;
+        n = el("figure", "rd-fig2"); var row = el("div", "rd-fig2__row");
+        ps.forEach(function (p) { row.appendChild(p); }); n.appendChild(row);
+        if (b.cap) n.appendChild(el("figcaption", "", b.cap));
+      } else if (b.t === "btn") {
+        var h = linkHref(b.url); if (!h || !b.label) return;
+        n = el("p", "rd-btnrow"); var a = el("a", "btn btn--soft rd-btn", b.label);
+        a.href = h; a.target = "_blank"; a.rel = "noopener"; n.appendChild(a);
+      } else if (b.t === "list") {
+        var items = (b.items || []).filter(function (x) { return String(x).trim(); }); if (!items.length) return;
+        n = el("ul", "rd-list"); items.forEach(function (x) { n.appendChild(el("li", "", x)); });
+      } else if (b.t === "hr") {
+        n = el("hr", "rd-hr");
+      }
+      if (n) box.appendChild(n);
+    });
+  }
+
   window.WZ = {
     CFG: CFG, loadSheet: loadSheet, api: api, num: num, safeUrl: safeUrl, imgSrc: imgSrc,
     price: price, deadline: deadline, el: el, media: media, list: list, resizeImage: resizeImage,
-    photos: photos, firstImg: firstImg, slider: slider, photoSet: photoSet
+    photos: photos, firstImg: firstImg, slider: slider, photoSet: photoSet,
+    parseDoc: parseDoc, renderDetail: renderDetail, docText: docText, docImages: docImages,
+    sanitizeInline: sanitizeInline, inlineHtml: inlineHtml, linkHref: linkHref, picSrc: picSrc
   };
 })();
