@@ -148,6 +148,7 @@ button{font-family:inherit}
 .infobox dt{color:var(--g600)} .infobox dd{margin:0;font-weight:700;text-align:right}
 .modal__detail{margin:16px 0 0;color:var(--g700)}
 .attach{margin-top:20px}
+.attach + .modal__detail{margin-top:20px}
 .attach__toggle{width:100%}
 .attach__list{margin-top:12px;display:flex;flex-direction:column;gap:12px}
 .attach__list img{width:100%;border-radius:16px;border:1px solid var(--g100)}
@@ -536,3 +537,50 @@ button{font-family:inherit}
 .pthumb.is-drag{opacity:.4}
 .pthumb.is-over{outline:3px solid var(--blue);outline-offset:2px;border-radius:16px}
 .page .re-head{top:68px} dialog .re-head{top:0}
+
+/* ---------- 워드형 편집기 ---------- */
+.re-select{height:40px;padding:0 30px 0 12px;border:0;border-radius:10px;background:var(--g50) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234E5968' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;-webkit-appearance:none;appearance:none;font:600 14px/1 var(--font);color:var(--text);cursor:pointer}
+.re-tool--pic{position:relative;overflow:hidden;color:var(--blue);background:var(--blue-l)}
+.re-tool--pic:hover{background:#D6EAF7}
+.re-tool--pic input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.re-tool--pic:focus-within{outline:3px solid rgba(0,114,185,.45);outline-offset:2px}
+.re-stage{position:relative}
+.re-doc{position:relative;min-height:340px;padding:20px 22px 28px;outline:none;font-size:16px;line-height:27px;color:var(--g700);word-break:keep-all;overflow-wrap:anywhere;cursor:text}
+.re-doc:focus{box-shadow:inset 0 0 0 2px rgba(0,114,185,.25);border-radius:0 0 20px 20px}
+.re-doc.is-empty::before{content:attr(data-ph);position:absolute;left:22px;top:20px;right:22px;color:var(--g600);pointer-events:none}
+.re-doc > *{margin:12px 0 0}
+.re-doc > *:first-child{margin-top:0}
+.re-doc p{min-height:27px}
+.re-doc h1,.re-doc h2,.re-doc h3,.re-doc h4,.re-doc h5,.re-doc h6{margin-top:24px;font-size:19px;line-height:28px;font-weight:700;letter-spacing:-.4px;color:var(--text)}
+.re-doc b,.re-doc strong{font-weight:700;color:var(--text)}
+.re-doc a{color:var(--blue)}
+.re-doc ul,.re-doc ol{padding-left:22px}
+.re-doc li{margin-top:4px}
+.re-doc li::marker{color:var(--blue)}
+.re-doc .re-note{padding:14px 18px;border-radius:14px;background:var(--blue-l);color:var(--text)}
+.re-doc .re-note + .re-note{margin-top:0;border-top-left-radius:0;border-top-right-radius:0;padding-top:0}
+.re-doc hr{margin:20px 0;border:0;border-top:1px solid var(--g300)}
+.re-doc figure.re-fig{position:relative;margin:16px 0 0;cursor:pointer;border-radius:14px;user-select:none;-webkit-user-select:none}
+.re-doc figure.re-fig img{width:100%;height:auto;border-radius:14px;background:var(--g100);pointer-events:none}
+.re-doc figure.re-fig figcaption{margin-top:6px;font-size:14px;line-height:20px;color:var(--g600);text-align:center}
+.re-doc figure[data-align="center"]{max-width:66%;margin-left:auto;margin-right:auto}
+.re-doc figure[data-align="left"]{float:left;width:44%;margin:6px 18px 8px 0}
+.re-doc figure[data-align="right"]{float:right;width:44%;margin:6px 0 8px 18px}
+.re-doc::after{content:"";display:block;clear:both}
+.re-doc figure[data-align="full"],.re-doc figure[data-align="center"],.re-doc hr,.re-doc h4,.re-doc .re-note{clear:both}
+.re-doc figure.re-fig:hover{box-shadow:0 0 0 2px var(--g300)}
+.re-doc figure.re-fig.is-sel,.re-doc figure.re-fig:focus{outline:none;box-shadow:0 0 0 3px var(--blue)}
+.re-doc figure.re-fig.is-drag{opacity:.4}
+.re-pop{position:absolute;right:12px;z-index:4;display:flex;flex-direction:column;gap:6px;width:min(340px,calc(100% - 24px));padding:10px;border-radius:14px;background:#fff;box-shadow:0 6px 24px rgba(0,0,0,.16),0 0 0 1px var(--g200)}
+.re-pop__row{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.re-pop__btn{height:36px;padding:0 10px;border:1px solid var(--g200);border-radius:9px;background:#fff;font:600 13px/1 var(--font);color:var(--g700);cursor:pointer}
+.re-pop__btn.is-on{border-color:var(--blue);background:var(--blue-l);color:var(--blue)}
+.re-pop__icon{width:36px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.re-pop__del{color:var(--red)}
+.re-pop__cap{flex:1;min-width:120px;height:36px;padding:0 10px;font-size:14px;border-radius:9px}
+@media (max-width:560px){
+  .re-doc{padding:16px 14px 24px;min-height:300px}
+  .re-doc.is-empty::before{left:14px;top:16px}
+  .re-doc figure[data-align="left"],.re-doc figure[data-align="right"]{float:none;width:100%;margin:16px 0 0}
+  .re-doc figure[data-align="center"]{max-width:100%}
+}

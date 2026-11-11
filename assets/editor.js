@@ -1,25 +1,22 @@
-/* 상세설명 블록 편집기 — 상품 올리기 · 관리자 공용
-   W.richEditor(root, { maxImages, allowUrl, onChange, onError })
-   → { set(raw), get({preview}), draft(), text(), isEmpty(), imageCount() } */
+/* 상세설명 편집기 (워드처럼 한 장에 쭉 쓰기) — 상품 올리기 · 관리자 공용
+   W.richEditor(root, { maxImages, onChange, onError })
+   → { set(raw), get({preview|draft}), draft(), text(), isEmpty(), imageCount(), validate(), focus(), showEdit() }
+   저장 형식은 블록 문서(JSON) 그대로라 웹진·서버는 바뀌지 않아요. */
 (function () {
   "use strict";
   var W = window.WZ, el = W.el;
 
   var ICON = {
-    grip: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>',
-    up: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>',
-    down: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
-    del: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
-    link: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>'
+    link: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
+    pic: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-7 7"/></svg>',
+    list: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg>',
+    up: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>',
+    down: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>'
   };
-  var TYPES = [
-    ["p", "글"], ["h", "소제목"], ["img", "사진"], ["img2", "사진 2장"],
-    ["btn", "버튼"], ["note", "안내 박스"], ["list", "목록"], ["hr", "구분선"]
-  ];
-  var NAMES = { p: "글", h: "소제목", img: "사진", img2: "사진 2장", btn: "버튼", note: "안내 박스", list: "목록", hr: "구분선" };
-  var ALIGN = [["full", "전체 폭"], ["center", "가운데"], ["left", "왼쪽"], ["right", "오른쪽"]];
-  var COLORS = [["", "기본", "#191F28"], ["tx-blue", "파랑", "#0072B9"], ["tx-red", "빨강", "#D93A3F"], ["tx-gray", "회색", "#5F6A77"]];
+  var COLORS = [["", "기본", "#191F28"], ["tx-blue", "파랑", "#0072B9"], ["tx-red", "빨강", "#BE2A30"], ["tx-gray", "회색", "#5F6A77"]];
   var SIZES = [["tx-lg", "크게"], ["", "보통"], ["tx-sm", "작게"]];
+  var ALIGN = [["full", "전체 폭"], ["center", "가운데"], ["left", "왼쪽"], ["right", "오른쪽"]];
+  var INLINE = { "#text": 1, B: 1, STRONG: 1, I: 1, EM: 1, U: 1, SPAN: 1, FONT: 1, A: 1, BR: 1, SMALL: 1, SUB: 1, SUP: 1, MARK: 1, CODE: 1 };
 
   function btn(cls, html, label, fn) {
     var b = el("button", cls); b.type = "button"; b.innerHTML = html;
@@ -27,39 +24,47 @@
     if (fn) b.addEventListener("click", fn);
     return b;
   }
+  function blank(h) { var d = document.createElement("div"); d.innerHTML = h; return !d.textContent.replace(/\u00a0/g, " ").trim(); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
   W.richEditor = function (root, opt) {
     opt = opt || {};
     var maxImages = opt.maxImages || 10;
+    var pics = {}, seq = 0;          // 사진 번호 → 주소 문자열 또는 {file}
     root.classList.add("re");
     root.textContent = "";
 
-    // ---------- 상단: 편집 / 미리보기 + 꾸미기 도구 ----------
+    // ---------- 위쪽: 편집 / 미리보기 + 도구 ----------
     var head = el("div", "re-head");
     var tabs = el("div", "re-tabs"); tabs.setAttribute("role", "tablist");
     var tEdit = btn("re-tab is-on", "편집"), tPrev = btn("re-tab", "미리보기");
-    tEdit.setAttribute("role", "tab"); tPrev.setAttribute("role", "tab");
-    tEdit.setAttribute("aria-selected", "true"); tPrev.setAttribute("aria-selected", "false");
-    tabs.appendChild(tEdit); tabs.appendChild(tPrev);
+    [tEdit, tPrev].forEach(function (t, i) { t.setAttribute("role", "tab"); t.setAttribute("aria-selected", String(i === 0)); tabs.appendChild(t); });
     head.appendChild(tabs);
 
-    var bar = el("div", "re-bar"); bar.setAttribute("role", "toolbar"); bar.setAttribute("aria-label", "글자 꾸미기");
-    var hint = el("span", "re-bar__hint", "글이나 안내 박스에서 글자를 고른 뒤 눌러요");
-    var bBold = btn("re-tool re-tool--b", "B", "굵게", function () { exec("bold"); });
-    bar.appendChild(bBold);
+    var bar = el("div", "re-bar"); bar.setAttribute("role", "toolbar"); bar.setAttribute("aria-label", "글 꾸미기");
+    var fmt = el("select", "re-select"); fmt.setAttribute("aria-label", "글 모양");
+    [["p", "본문"], ["h4", "소제목"]].forEach(function (o) { var x = el("option", "", o[1]); x.value = o[0]; fmt.appendChild(x); });
+    fmt.addEventListener("change", function () { restore(); document.execCommand("formatBlock", false, fmt.value); changed(); });
+    bar.appendChild(fmt);
     bar.appendChild(el("span", "re-sep"));
+    bar.appendChild(btn("re-tool re-tool--b", "B", "굵게", function () { if (needSel()) { document.execCommand("bold"); changed(); } }));
     COLORS.forEach(function (c) {
-      var b = btn("re-tool re-tool--color", '<span class="re-dot" style="background:' + c[2] + '"></span>', "글자색 " + c[1], function () { wrapClass(["tx-blue", "tx-red", "tx-gray"], c[0]); });
-      bar.appendChild(b);
+      bar.appendChild(btn("re-tool re-tool--color", '<span class="re-dot" style="background:' + c[2] + '"></span>', "글자색 " + c[1], function () { wrapClass(["tx-blue", "tx-red", "tx-gray"], c[0]); }));
+    });
+    SIZES.forEach(function (z) {
+      bar.appendChild(btn("re-tool re-tool--size" + (z[0] ? " " + z[0] : ""), z[1], "글자 크기 " + z[1], function () { wrapClass(["tx-lg", "tx-sm"], z[0]); }));
     });
     bar.appendChild(el("span", "re-sep"));
-    SIZES.forEach(function (s) {
-      bar.appendChild(btn("re-tool re-tool--size" + (s[0] ? " " + s[0] : ""), s[1], "글자 크기 " + s[1], function () { wrapClass(["tx-lg", "tx-sm"], s[0]); }));
-    });
-    bar.appendChild(el("span", "re-sep"));
-    var bLink = btn("re-tool", ICON.link + "<span>링크</span>", "링크 걸기", openLink);
-    bar.appendChild(bLink);
+    bar.appendChild(btn("re-tool", ICON.list, "목록", toggleList));
+    bar.appendChild(btn("re-tool", "안내 박스", "안내 박스 (파란 상자)", toggleNote));
+    bar.appendChild(btn("re-tool", ICON.link + "<span>링크</span>", "링크 걸기", openLink));
+    bar.appendChild(btn("re-tool", "구분선", "구분선 넣기", function () { insertBlock(el("hr")); }));
+    var picBtn = el("label", "re-tool re-tool--pic"); picBtn.innerHTML = ICON.pic + "<span>사진</span>"; picBtn.title = "사진 넣기";
+    var picInput = el("input"); picInput.type = "file"; picInput.accept = "image/*"; picInput.multiple = true; picInput.setAttribute("aria-label", "사진 넣기");
+    picBtn.appendChild(picInput); bar.appendChild(picBtn);
     bar.appendChild(btn("re-tool", "지우기", "꾸밈 지우기", clearFormat));
+    var hint = el("span", "re-bar__hint", "글자를 고른 뒤 꾸미기를 눌러요 · 사진을 누르면 위치를 바꿀 수 있어요");
+    bar.appendChild(hint);
     head.appendChild(bar);
 
     var linkRow = el("div", "re-linkrow"); linkRow.hidden = true;
@@ -70,397 +75,480 @@
     linkInput.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); applyLink(); } });
     head.appendChild(linkRow);
     root.appendChild(head);
-
-    // 도구 버튼을 눌러도 고른 글자가 풀리지 않게
     bar.addEventListener("mousedown", function (e) { if (e.target.closest(".re-tool")) e.preventDefault(); });
 
-    var list = el("div", "re-list"); root.appendChild(list);
-    var empty = el("p", "re-empty", "아래 버튼으로 글이나 사진을 넣어보세요"); list.appendChild(empty);
-    var prev = el("div", "re-preview modal__detail"); prev.hidden = true; root.appendChild(prev);
+    // ---------- 본문 (한 장) ----------
+    var stage = el("div", "re-stage");
+    var doc = el("div", "re-doc");
+    doc.contentEditable = "true"; doc.setAttribute("role", "textbox"); doc.setAttribute("aria-multiline", "true");
+    doc.setAttribute("aria-label", "자세한 설명"); doc.dataset.ph = "여기에 바로 써주세요. 사진은 위의 '사진' 버튼으로 넣어요.";
+    stage.appendChild(doc);
+    // 사진 메뉴 (사진을 누르면 나와요)
+    var pop = el("div", "re-pop"); pop.hidden = true; pop.setAttribute("role", "toolbar"); pop.setAttribute("aria-label", "사진 설정");
+    var popAlign = el("div", "re-pop__row");
+    ALIGN.forEach(function (a) { popAlign.appendChild(btn("re-pop__btn", a[1], "사진 위치 " + a[1], function () { if (selFig) { selFig.dataset.align = a[0]; syncPop(); changed(); } })); });
+    pop.appendChild(popAlign);
+    var popRow2 = el("div", "re-pop__row");
+    var capIn = el("input", "input re-pop__cap"); capIn.placeholder = "사진 설명 (선택)"; capIn.maxLength = 60; capIn.setAttribute("aria-label", "사진 설명");
+    capIn.addEventListener("input", function () { if (!selFig) return; setCap(selFig, capIn.value); changed(); });
+    popRow2.appendChild(capIn);
+    popRow2.appendChild(btn("re-pop__btn re-pop__icon", ICON.up, "사진 위로", function () { moveFig(-1); }));
+    popRow2.appendChild(btn("re-pop__btn re-pop__icon", ICON.down, "사진 아래로", function () { moveFig(1); }));
+    popRow2.appendChild(btn("re-pop__btn re-pop__del", "삭제", "사진 삭제", function () { if (selFig) { var f = selFig; unselect(); f.remove(); ensureEnd(); changed(); } }));
+    pop.appendChild(popRow2);
+    stage.appendChild(pop);
+    root.appendChild(stage);
 
-    var add = el("div", "re-add");
-    add.appendChild(el("span", "re-add__label", "넣기"));
-    var addRow = el("div", "re-add__row");
-    TYPES.forEach(function (t) { addRow.appendChild(btn("re-add__btn", t[1], NAMES[t[0]] + " 넣기", function () { insert({ t: t[0] }, true); })); });
-    add.appendChild(addRow);
-    root.appendChild(add);
+    var prev = el("div", "re-preview modal__detail"); prev.hidden = true; root.appendChild(prev);
     var count = el("p", "re-count"); root.appendChild(count);
 
-    var lastBlock = null, savedRange = null, lastRich = null;
+    try { document.execCommand("defaultParagraphSeparator", false, "p"); } catch (e) { /* 무시 */ }
 
+    var savedRange = null, selFig = null;
     function changed() { refresh(); if (opt.onChange) opt.onChange(); }
-
-    // ---------- 블록 공통 틀 ----------
-    function frame(b) {
-      var node = el("div", "re-block re-block--" + b.t);
-      node._b = b;
-      var side = el("div", "re-block__side");
-      var grip = el("span", "re-icon re-grip"); grip.innerHTML = ICON.grip; grip.title = "끌어서 순서 바꾸기"; grip.setAttribute("aria-hidden", "true");
-      grip.draggable = true;
-      grip.addEventListener("dragstart", function (e) {
-        dragging = node; node.classList.add("is-drag");
-        e.dataTransfer.effectAllowed = "move";
-        try { e.dataTransfer.setData("text/plain", ""); e.dataTransfer.setDragImage(node, 20, 20); } catch (er) { /* 무시 */ }
-      });
-      grip.addEventListener("dragend", function () { node.classList.remove("is-drag"); dragging = null; clearMark(); changed(); });
-      side.appendChild(grip);
-      node.appendChild(side);
-      var body = el("div", "re-block__body");
-      body.appendChild(el("span", "re-block__name", NAMES[b.t]));
-      node.appendChild(body);
-      var tools = el("div", "re-block__tools");
-      tools.appendChild(btn("re-icon re-up", ICON.up, NAMES[b.t] + " 위로", function () { move(node, -1); }));
-      tools.appendChild(btn("re-icon re-down", ICON.down, NAMES[b.t] + " 아래로", function () { move(node, 1); }));
-      tools.appendChild(btn("re-icon re-del", ICON.del, NAMES[b.t] + " 지우기", function () {
-        var next = node.nextElementSibling || node.previousElementSibling;
-        node.remove(); if (lastBlock === node) lastBlock = null;
-        if (next && next._b) { var f = next.querySelector("button,input,[contenteditable]"); if (f) f.focus(); }
-        changed();
-      }));
-      node.appendChild(tools);
-      node.addEventListener("focusin", function () { lastBlock = node; });
-      return { node: node, body: body };
-    }
-
-    // ---------- 글 (꾸밀 수 있는 칸) ----------
-    function rich(b, ph) {
-      var ed = el("div", "re-rich"); ed.contentEditable = "true";
-      ed.setAttribute("role", "textbox"); ed.setAttribute("aria-multiline", "true");
-      ed.setAttribute("aria-label", ph); ed.dataset.ph = ph;
-      ed.appendChild(W.sanitizeInline(b.html || ""));
-      ed.addEventListener("input", function () { b.html = ed.innerHTML; if (opt.onChange) opt.onChange(); });
-      ed.addEventListener("focus", function () { lastRich = ed; });
-      ed.addEventListener("paste", function (e) {
-        e.preventDefault();
-        var t = (e.clipboardData || window.clipboardData).getData("text/plain");
-        document.execCommand("insertText", false, t);
-      });
-      ed.addEventListener("drop", function (e) { if (!dragging) e.preventDefault(); });
-      return ed;
-    }
-
-    // ---------- 사진 칸 ----------
-    function picSlot(get, set, label) {
-      var slot = el("div", "re-pic");
-      function draw() {
-        slot.textContent = "";
-        var src = get();
-        if (src) {
-          var img = el("img"); img.src = W.picSrc(src); img.alt = ""; slot.appendChild(img);
-          var acts = el("div", "re-pic__acts");
-          var change = el("label", "re-pic__btn", "바꾸기");
-          var inp = fileInput(); change.appendChild(inp); acts.appendChild(change);
-          acts.appendChild(btn("re-pic__btn", "빼기", label + " 빼기", function () { set(null); draw(); changed(); }));
-          slot.appendChild(acts);
-        } else {
-          var up = el("label", "re-pic__empty");
-          up.appendChild(fileInput());
-          up.appendChild(el("strong", "", "사진 고르기"));
-          up.appendChild(el("span", "", "알맞은 크기로 줄여드려요"));
-          slot.appendChild(up);
-          if (opt.allowUrl !== false) {
-            var url = el("input", "input re-pic__url"); url.placeholder = "또는 사진 주소(https://) 붙여넣고 Enter";
-            url.setAttribute("aria-label", label + " 주소");
-            url.addEventListener("keydown", function (e) {
-              if (e.key !== "Enter") return; e.preventDefault();
-              var v = url.value.trim();
-              if (!/^https?:\/\//i.test(v)) { err("사진 주소는 https://로 시작해야 해요"); return; }
-              if (!room()) return;
-              set({ url: v }); draw(); changed();
-            });
-            slot.appendChild(url);
-          }
-        }
-      }
-      function fileInput() {
-        var inp = el("input"); inp.type = "file"; inp.accept = "image/*"; inp.setAttribute("aria-label", label + " 고르기");
-        inp.addEventListener("change", function () {
-          var f = this.files && this.files[0]; this.value = "";
-          if (!f) return;
-          if (!get() && !room()) return;
-          W.resizeImage(f, 1400).then(function (r) { set({ file: r }); draw(); changed(); }, function (e) { err(e.message); });
-        });
-        return inp;
-      }
-      draw();
-      return slot;
-    }
-    function room() {
-      if (imageCount() >= maxImages) { err("본문 사진은 " + maxImages + "장까지 넣을 수 있어요"); return false; }
-      return true;
-    }
     function err(m) { if (opt.onError) opt.onError(m); }
-    // 사진 값: 저장된 주소(문자열) / {url} / {file:{name,data,preview}}
-    function srcOf(v) { return !v ? "" : typeof v === "string" ? v : v.url ? v.url : v.file ? v.file.preview : ""; }
 
-    // ---------- 블록 만들기 ----------
-    function build(b) {
-      var f = frame(b), body = f.body;
-      if (b.t === "p") body.appendChild(rich(b, "내용을 써주세요"));
-      if (b.t === "note") body.appendChild(rich(b, "눈에 띄게 알려줄 내용을 써주세요"));
-      if (b.t === "h") {
-        var h = el("input", "input re-h"); h.value = b.text || ""; h.maxLength = 40; h.placeholder = "소제목 (40자 이내)"; h.setAttribute("aria-label", "소제목");
-        h.addEventListener("input", function () { b.text = h.value; if (opt.onChange) opt.onChange(); });
-        body.appendChild(h);
-      }
-      if (b.t === "img") {
-        b.align = b.align || "full";
-        body.appendChild(picSlot(function () { return srcOf(b.pic); }, function (v) { b.pic = v; }, "사진"));
-        var seg = el("div", "re-seg"); seg.setAttribute("role", "radiogroup"); seg.setAttribute("aria-label", "사진 위치");
-        ALIGN.forEach(function (a) {
-          var x = btn("re-seg__btn" + (b.align === a[0] ? " is-on" : ""), a[1], "", function () {
-            b.align = a[0];
-            seg.querySelectorAll(".re-seg__btn").forEach(function (y) { y.classList.remove("is-on"); y.setAttribute("aria-checked", "false"); });
-            x.classList.add("is-on"); x.setAttribute("aria-checked", "true"); changed();
-          });
-          x.setAttribute("role", "radio"); x.setAttribute("aria-checked", String(b.align === a[0]));
-          seg.appendChild(x);
-        });
-        body.appendChild(seg);
-        body.appendChild(capInput(b));
-      }
-      if (b.t === "img2") {
-        b.pics = b.pics || [null, null];
-        var two = el("div", "re-two");
-        [0, 1].forEach(function (k) {
-          two.appendChild(picSlot(function () { return srcOf(b.pics[k]); }, function (v) { b.pics[k] = v; }, (k + 1) + "번째 사진"));
-        });
-        body.appendChild(two);
-        body.appendChild(capInput(b));
-      }
-      if (b.t === "btn") {
-        var row = el("div", "re-btnrow");
-        var lb = el("input", "input"); lb.value = b.label || ""; lb.maxLength = 20; lb.placeholder = "버튼 글자 (예: 신청서 받기)"; lb.setAttribute("aria-label", "버튼 글자");
-        var ur = el("input", "input"); ur.value = b.url || ""; ur.placeholder = "연결할 주소나 이메일"; ur.setAttribute("aria-label", "버튼 연결 주소");
-        lb.addEventListener("input", function () { b.label = lb.value; if (opt.onChange) opt.onChange(); });
-        ur.addEventListener("input", function () { b.url = ur.value; if (opt.onChange) opt.onChange(); });
-        row.appendChild(lb); row.appendChild(ur); body.appendChild(row);
-      }
-      if (b.t === "list") {
-        var ta = el("textarea", "textarea re-listta"); ta.value = (b.items || []).join("\n");
-        ta.placeholder = "한 줄에 하나씩 써주세요"; ta.setAttribute("aria-label", "목록 (한 줄에 하나씩)");
-        ta.addEventListener("input", function () { b.items = ta.value.split("\n"); if (opt.onChange) opt.onChange(); });
-        body.appendChild(ta);
-      }
-      if (b.t === "hr") body.appendChild(el("hr", "rd-hr"));
-      return f.node;
-    }
-    function capInput(b) {
-      var c = el("input", "input re-cap"); c.value = b.cap || ""; c.maxLength = 60; c.placeholder = "사진 설명 (선택)"; c.setAttribute("aria-label", "사진 설명");
-      c.addEventListener("input", function () { b.cap = c.value; if (opt.onChange) opt.onChange(); });
-      return c;
-    }
-
-    function blocks() { return Array.prototype.filter.call(list.children, function (n) { return n._b; }); }
-    function insert(b, focus) {
-      var node = build(b);
-      if (lastBlock && lastBlock.parentNode === list) lastBlock.after(node); else list.appendChild(node);
-      lastBlock = node;
-      changed();
-      if (focus) {
-        var f = node.querySelector("[contenteditable],input:not([type=file]),textarea") || node.querySelector("button");
-        if (f) f.focus();
-        node.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      }
-      return node;
-    }
-    function move(node, dir) {
-      var sib = dir < 0 ? node.previousElementSibling : node.nextElementSibling;
-      if (!sib || !sib._b) return;
-      if (dir < 0) sib.before(node); else sib.after(node);
-      var f = node.querySelector(dir < 0 ? ".re-up" : ".re-down");
-      if (f && !f.disabled) f.focus(); else { var o2 = node.querySelector(dir < 0 ? ".re-down" : ".re-up"); if (o2) o2.focus(); }
-      changed();
-    }
-    function refresh() {
-      var bs = blocks();
-      empty.hidden = bs.length > 0;
-      bs.forEach(function (n, i) {
-        n.querySelector(".re-up").disabled = i === 0;
-        n.querySelector(".re-down").disabled = i === bs.length - 1;
-      });
-      var c = imageCount();
-      count.textContent = "본문 사진 " + c + " / " + maxImages + "장";
-      if (!tPrev.classList.contains("is-on")) return;
-      W.renderDetail(prev, get({ preview: true }).doc);
-    }
-
-    // ---------- 끌어서 옮기기 ----------
-    var dragging = null, mark = el("div", "re-mark");
-    function clearMark() { if (mark.parentNode) mark.remove(); }
-    list.addEventListener("dragover", function (e) {
-      if (!dragging) return;
-      e.preventDefault();
-      var over = e.target.closest && e.target.closest(".re-block");
-      if (!over || over === dragging) return;
-      var r = over.getBoundingClientRect();
-      if (e.clientY < r.top + r.height / 2) over.before(mark); else over.after(mark);
-    });
-    list.addEventListener("drop", function (e) {
-      if (!dragging) return;
-      e.preventDefault();
-      if (mark.parentNode) mark.replaceWith(dragging);
-    });
-
-    // ---------- 글자 꾸미기 ----------
+    // ---------- 커서 · 선택 ----------
+    function inDoc(n) { return n && (n === doc || doc.contains(n)); }
     function curRange() {
       var sel = window.getSelection();
       if (!sel.rangeCount) return null;
       var r = sel.getRangeAt(0);
-      var host = r.commonAncestorContainer.nodeType === 1 ? r.commonAncestorContainer : r.commonAncestorContainer.parentNode;
-      var ed = host && host.closest && host.closest(".re-rich");
-      return ed && root.contains(ed) ? { r: r, ed: ed } : null;
+      return inDoc(r.commonAncestorContainer) ? r : null;
+    }
+    document.addEventListener("selectionchange", function () {
+      var r = curRange(); if (!r) return;
+      savedRange = r.cloneRange();
+      var b = topBlock(r.startContainer);
+      fmt.value = b && /^H\d$/.test(b.nodeName) ? "h4" : "p";
+    });
+    function restore() {
+      var r = curRange() || (savedRange && inDoc(savedRange.commonAncestorContainer) ? savedRange : null);
+      if (r && r.startContainer.nodeType === 1 && r.startContainer.closest && r.startContainer.closest("figure")) r = null;
+      if (document.activeElement !== doc) doc.focus({ preventScroll: true });
+      var s = window.getSelection();
+      if (r) { s.removeAllRanges(); s.addRange(r); } else placeEnd();
+    }
+    function placeEnd() {
+      var r = document.createRange(); r.selectNodeContents(doc); r.collapse(false);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
     }
     function needSel() {
-      var c = curRange();
-      if (!c || c.r.collapsed) { flash(); return null; }
-      return c;
+      restore();
+      var r = curRange();
+      if (!r || r.collapsed) { hint.classList.remove("is-flash"); void hint.offsetWidth; hint.classList.add("is-flash"); return null; }
+      return r;
     }
-    function flash() { hint.classList.remove("is-flash"); void hint.offsetWidth; hint.classList.add("is-flash"); }
-    function after(ed) { ed.dispatchEvent(new Event("input", { bubbles: true })); }
-    function exec(cmd) {
-      var c = needSel(); if (!c) return;
-      try { document.execCommand("styleWithCSS", false, false); } catch (e) { /* 무시 */ }
-      document.execCommand(cmd, false, null);
-      after(c.ed);
+    function topBlock(n) {
+      while (n && n.parentNode !== doc) { if (n === doc || !n.parentNode) return null; n = n.parentNode; }
+      return n;
     }
+
+    // ---------- 꾸미기 ----------
     function wrapClass(group, cls) {
-      var c = needSel(); if (!c) return;
-      var frag = c.r.extractContents();
+      var r = needSel(); if (!r) return;
+      var frag = r.extractContents();
       frag.querySelectorAll("span").forEach(function (s) {
         group.forEach(function (g) { s.classList.remove(g); });
         if (!s.classList.length) { while (s.firstChild) s.parentNode.insertBefore(s.firstChild, s); s.remove(); }
       });
-      var node = frag;
+      var node = frag, first = frag.firstChild, last = frag.lastChild;
       if (cls) { var sp = document.createElement("span"); sp.className = cls; sp.appendChild(frag); node = sp; }
-      var first = node.firstChild, last = node.lastChild, isSpan = node.nodeType === 1;
-      c.r.insertNode(node);
-      var sel = window.getSelection(), nr = document.createRange();
-      if (isSpan) nr.selectNodeContents(node); else if (first && last) { nr.setStartBefore(first); nr.setEndAfter(last); }
-      sel.removeAllRanges(); sel.addRange(nr);
-      after(c.ed);
+      r.insertNode(node);
+      var nr = document.createRange();
+      if (cls) nr.selectNodeContents(node); else if (first && last) { nr.setStartBefore(first); nr.setEndAfter(last); }
+      var s2 = window.getSelection(); s2.removeAllRanges(); s2.addRange(nr);
+      changed();
     }
     function clearFormat() {
-      var c = needSel(); if (!c) return;
-      var t = c.r.toString();
-      c.r.deleteContents();
-      var tn = document.createTextNode(t); c.r.insertNode(tn);
-      // 감싸고 있던 꾸밈 밖으로 꺼내기
-      var p = tn.parentNode;
-      while (p && p !== c.ed && /^(B|STRONG|SPAN|A)$/.test(p.nodeName)) {
-        splitOut(tn, p); p = tn.parentNode;
+      var r = needSel(); if (!r) return;
+      document.execCommand("removeFormat"); document.execCommand("unlink");
+      r = curRange();
+      if (r && !r.collapsed) {
+        var t = r.toString(); r.deleteContents();
+        var tn = document.createTextNode(t); r.insertNode(tn);
+        var p = tn.parentNode;
+        while (p && p !== doc && /^(B|STRONG|SPAN|A|FONT|I|EM|U)$/.test(p.nodeName)) { splitOut(tn, p); p = tn.parentNode; }
       }
-      after(c.ed);
+      changed();
     }
     function splitOut(node, parent) {
-      var rightPart = parent.cloneNode(false);
-      while (node.nextSibling) rightPart.appendChild(node.nextSibling);
+      var right = parent.cloneNode(false);
+      while (node.nextSibling) right.appendChild(node.nextSibling);
       parent.after(node);
-      if (rightPart.childNodes.length) node.after(rightPart);
+      if (right.childNodes.length) node.after(right);
       if (!parent.childNodes.length) parent.remove();
     }
+    function toggleNote() {
+      var list = selBlocks(); if (!list.length) return;
+      var a = list[0], last = null;
+      var on = !(a.classList && a.classList.contains("re-note"));
+      list.forEach(function (b) {
+        if (b.nodeType !== 1 || b.nodeName === "FIGURE" || b.nodeName === "HR" || /^(UL|OL)$/.test(b.nodeName)) return;
+        var x = document.createElement(on ? "div" : "p");
+        if (on) x.className = "re-note";
+        while (b.firstChild) x.appendChild(b.firstChild);
+        if (!x.childNodes.length) x.appendChild(document.createElement("br"));
+        b.replaceWith(x); last = x;
+      });
+      if (last) caretIn(last, true);
+      ensureEnd(); changed();
+    }
+    function selBlocks() {
+      restore();
+      var r = curRange(); if (!r) return [];
+      var a = topBlock(r.startContainer), z = topBlock(r.endContainer);
+      if (!a) return [];
+      var list = [], n = a;
+      while (n) { if (n.nodeType === 1) list.push(n); if (n === z || !z) break; n = n.nextSibling; }
+      return list;
+    }
+    function caretIn(node, atEnd) {
+      var r = document.createRange(); r.selectNodeContents(node); r.collapse(!atEnd);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    }
+    function toggleList() {
+      var bs = selBlocks(); if (!bs.length) return;
+      var last = null;
+      if (bs[0].nodeName === "UL" || bs[0].nodeName === "OL") {
+        // 목록 풀기: 고른 목록의 항목을 문단으로
+        bs.forEach(function (ul) {
+          if (ul.nodeName !== "UL" && ul.nodeName !== "OL") return;
+          Array.prototype.slice.call(ul.children).forEach(function (li) {
+            var p = document.createElement("p");
+            while (li.firstChild) p.appendChild(li.firstChild);
+            if (!p.childNodes.length) p.appendChild(document.createElement("br"));
+            ul.before(p); last = p;
+          });
+          ul.remove();
+        });
+      } else {
+        var ul = document.createElement("ul");
+        bs[0].before(ul);
+        bs.forEach(function (b) {
+          if (b.nodeName === "FIGURE" || b.nodeName === "HR") return;
+          if (b.nodeName === "UL" || b.nodeName === "OL") { while (b.firstChild) ul.appendChild(b.firstChild); b.remove(); return; }
+          var li = document.createElement("li");
+          while (b.firstChild) li.appendChild(b.firstChild);
+          if (!li.childNodes.length) li.appendChild(document.createElement("br"));
+          ul.appendChild(li); b.remove(); last = li;
+        });
+        // 바로 붙은 목록끼리는 합치기
+        [ul.previousElementSibling, ul.nextElementSibling].forEach(function (sib) {
+          if (sib && sib.nodeName === "UL") { if (sib === ul.previousElementSibling) { while (ul.firstChild) sib.appendChild(ul.firstChild); ul.remove(); ul = sib; } else { while (sib.firstChild) ul.appendChild(sib.firstChild); sib.remove(); } }
+        });
+        if (!ul.children.length) ul.remove();
+      }
+      if (last && doc.contains(last)) caretIn(last, true);
+      ensureEnd(); changed();
+    }
     function openLink() {
-      var c = needSel(); if (!c) return;
-      savedRange = c.r.cloneRange(); lastRich = c.ed;
-      var a = c.r.commonAncestorContainer.parentNode && c.r.commonAncestorContainer.parentNode.closest && c.r.commonAncestorContainer.parentNode.closest("a");
+      var r = needSel(); if (!r) return;
+      savedRange = r.cloneRange();
+      var a = r.startContainer.parentNode && r.startContainer.parentNode.closest && r.startContainer.parentNode.closest("a");
       linkInput.value = a ? a.getAttribute("href").replace(/^mailto:/, "") : "";
       linkRow.hidden = false; linkInput.focus();
     }
     function applyLink() {
-      var v = linkInput.value.trim();
-      var h = v ? W.linkHref(v) : "";
+      var v = linkInput.value.trim(), h = v ? W.linkHref(v) : "";
       if (v && !h) { err("https://로 시작하는 주소나 이메일을 넣어주세요"); linkInput.focus(); return; }
       linkRow.hidden = true;
-      if (!savedRange || !lastRich) return;
-      lastRich.focus();
-      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(savedRange);
-      if (h) document.execCommand("createLink", false, h); else document.execCommand("unlink", false, null);
-      after(lastRich);
+      doc.focus();
+      if (savedRange) { var s = window.getSelection(); s.removeAllRanges(); s.addRange(savedRange); }
+      document.execCommand(h ? "createLink" : "unlink", false, h || null);
+      changed();
+    }
+
+    // ---------- 사진 ----------
+    function imageCount() { return doc.querySelectorAll("figure.re-fig").length; }
+    function makeFig(pic, align, cap) {
+      var key = "k" + (++seq); pics[key] = pic;
+      var f = document.createElement("figure");
+      f.className = "re-fig"; f.contentEditable = "false"; f.dataset.key = key; f.dataset.align = align || "full";
+      f.tabIndex = 0; f.setAttribute("role", "button"); f.setAttribute("aria-label", "사진 (눌러서 위치·설명 바꾸기)");
+      f.draggable = true;
+      var img = document.createElement("img"); img.alt = ""; img.draggable = false;
+      img.src = typeof pic === "string" ? W.picSrc(pic) : pic.file.preview;
+      f.appendChild(img);
+      if (cap) setCap(f, cap);
+      return f;
+    }
+    function setCap(f, v) {
+      var c = f.querySelector("figcaption");
+      if (!v) { if (c) c.remove(); return; }
+      if (!c) { c = document.createElement("figcaption"); f.appendChild(c); }
+      c.textContent = v;
+    }
+    function insertBlock(node, after) {
+      var b = null;
+      if (after && doc.contains(after)) b = after;
+      else { restore(); var r = curRange(); b = r ? topBlock(r.startContainer) : null; }
+      if (b && b.nodeType === 1 && !b.textContent.trim() && !b.querySelector("img") && b.nodeName !== "HR" && b.nodeName !== "FIGURE") b.replaceWith(node);
+      else if (b) b.after(node);
+      else doc.appendChild(node);
+      var next = node.nextSibling;
+      if (!next || next.nodeName === "FIGURE" || next.nodeName === "HR") { var p = document.createElement("p"); p.appendChild(document.createElement("br")); node.after(p); next = p; }
+      var nr = document.createRange(); nr.selectNodeContents(next); nr.collapse(true);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(nr);
+      changed();
+      return node;
+    }
+    function addFiles(files) {
+      var room = maxImages - imageCount();
+      var fs = Array.prototype.filter.call(files, function (f) { return /^image\//.test(f.type); });
+      if (fs.length > room) err("본문 사진은 " + maxImages + "장까지 넣을 수 있어요");
+      fs = fs.slice(0, Math.max(0, room));
+      var chain = Promise.resolve(), prevFig = null;
+      fs.forEach(function (f) {
+        chain = chain.then(function () { return W.resizeImage(f, 1400); })
+          .then(function (r) { prevFig = insertBlock(makeFig({ file: r }, "full"), prevFig); }, function (e) { err(e.message); });
+      });
+      return chain;
+    }
+    picInput.addEventListener("change", function () { var fs = this.files; addFiles(fs).then(function () { picInput.value = ""; }); });
+
+    function select(f) {
+      if (selFig === f) return;
+      unselect(); selFig = f; f.classList.add("is-sel");
+      var c = f.querySelector("figcaption"); capIn.value = c ? c.textContent : "";
+      pop.hidden = false; syncPop(); placePop();
+    }
+    function unselect() { if (selFig) selFig.classList.remove("is-sel"); selFig = null; pop.hidden = true; }
+    function syncPop() {
+      if (!selFig) return;
+      popAlign.querySelectorAll(".re-pop__btn").forEach(function (b, i) { b.classList.toggle("is-on", ALIGN[i][0] === selFig.dataset.align); });
+      placePop();
+    }
+    function placePop() {
+      if (!selFig) return;
+      var sr = stage.getBoundingClientRect(), fr = selFig.getBoundingClientRect();
+      pop.style.top = Math.max(0, fr.bottom - sr.top + 8) + "px";
+    }
+    function moveFig(d) {
+      if (!selFig) return;
+      var sib = d < 0 ? selFig.previousSibling : selFig.nextSibling;
+      while (sib && sib.nodeType === 3 && !sib.nodeValue.trim()) sib = d < 0 ? sib.previousSibling : sib.nextSibling;
+      if (!sib) return;
+      if (d < 0) sib.before(selFig); else sib.after(selFig);
+      ensureEnd(); placePop(); selFig.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      changed();
+    }
+    doc.addEventListener("click", function (e) {
+      var f = e.target.closest && e.target.closest("figure.re-fig");
+      if (f && inDoc(f)) select(f); else unselect();
+    });
+    doc.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+        var r = curRange(), blk = r && topBlock(r.startContainer);
+        if (blk && blk.classList && blk.classList.contains("re-note") && !blk.textContent.trim()) {
+          e.preventDefault();
+          var p = document.createElement("p"); p.appendChild(document.createElement("br"));
+          blk.replaceWith(p); caretIn(p, false); changed(); return;
+        }
+      }
+      if (selFig && document.activeElement === selFig && (e.key === "Delete" || e.key === "Backspace")) {
+        e.preventDefault(); var f = selFig; unselect(); f.remove(); ensureEnd(); changed();
+      }
+      if (selFig && document.activeElement === selFig && e.key === "Escape") unselect();
+    });
+    doc.addEventListener("focusin", function (e) {
+      var f = e.target.closest && e.target.closest("figure.re-fig");
+      if (f) select(f);
+    });
+    document.addEventListener("pointerdown", function (e) { if (!root.contains(e.target)) unselect(); });
+    window.addEventListener("resize", placePop);
+
+    // 붙여넣기: 사진 파일은 사진으로, 글은 허용한 모양만 남겨서
+    doc.addEventListener("paste", function (e) {
+      var cd = e.clipboardData || window.clipboardData; if (!cd) return;
+      var files = Array.prototype.filter.call(cd.files || [], function (f) { return /^image\//.test(f.type); });
+      e.preventDefault();
+      if (files.length) { addFiles(files); return; }
+      var html = cd.getData("text/html"), html2;
+      if (html) {
+        var body = new DOMParser().parseFromString(html, "text/html").body;
+        html2 = blocksToHtml(collect(body), true);
+      } else {
+        var t = cd.getData("text/plain");
+        html2 = t.split(/\r?\n/).map(function (l) { return "<p>" + (esc(l) || "<br>") + "</p>"; }).join("");
+        if (t.indexOf("\n") < 0) html2 = esc(t);
+      }
+      document.execCommand("insertHTML", false, html2);
+      tidy(); changed();
+    });
+    // 사진 끌어서 옮기기 (PC)
+    var dragFig = null;
+    doc.addEventListener("dragstart", function (e) {
+      var f = e.target.closest && e.target.closest("figure.re-fig");
+      unselect();
+      if (!f) return;
+      dragFig = f; f.classList.add("is-drag");
+      e.dataTransfer.effectAllowed = "move";
+      try { e.dataTransfer.setData("text/plain", ""); } catch (er) { /* 무시 */ }
+    });
+    doc.addEventListener("dragover", function (e) { if (dragFig) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; } });
+    doc.addEventListener("dragend", function () { if (dragFig) dragFig.classList.remove("is-drag"); dragFig = null; });
+    doc.addEventListener("drop", function (e) {
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) { e.preventDefault(); addFiles(e.dataTransfer.files); return; }
+      if (!dragFig) return;
+      e.preventDefault();
+      var t = e.target.nodeType === 1 ? e.target : e.target.parentNode;
+      var b = topBlock(t);
+      if (!b) {   // 문서 빈 곳: 가장 가까운 줄 찾기
+        var kids = Array.prototype.filter.call(doc.children, function (k) { return k !== dragFig; });
+        b = kids.filter(function (k) { return k.getBoundingClientRect().top < e.clientY; }).pop() || kids[0];
+      }
+      if (b && b !== dragFig) {
+        var r = b.getBoundingClientRect();
+        if (e.clientY < r.top + r.height / 2) b.before(dragFig); else b.after(dragFig);
+      }
+      dragFig.classList.remove("is-drag"); dragFig = null;
+      ensureEnd(); changed();
+    });
+    doc.addEventListener("input", function () { tidy(); changed(); });
+
+    // 끝에 항상 쓸 자리 + 맨 위 줄은 문단으로
+    function ensureEnd() {
+      var last = doc.lastChild;
+      while (last && last.nodeType === 3 && !last.nodeValue.trim()) last = last.previousSibling;
+      if (!last || last.nodeName === "FIGURE" || last.nodeName === "HR") { var p = document.createElement("p"); p.appendChild(document.createElement("br")); doc.appendChild(p); }
+    }
+    function tidy() {
+      // 드래그·붙여넣기로 생긴 '번호 없는 사진'이나 중복 번호 정리
+      var seen = {};
+      doc.querySelectorAll("figure").forEach(function (f) {
+        var k = f.dataset.key;
+        if (!k || !pics[k] || seen[k]) {
+          if (k && pics[k] && seen[k]) { var nk = "k" + (++seq); pics[nk] = pics[k]; f.dataset.key = nk; k = nk; }
+          else { f.remove(); return; }
+        }
+        seen[k] = 1;
+        f.contentEditable = "false"; f.classList.add("re-fig"); f.tabIndex = 0;
+      });
+      // 문서 바로 아래 맨 글자는 문단으로 감싸기
+      Array.prototype.slice.call(doc.childNodes).forEach(function (n) {
+        if (n.nodeType === 3 && n.nodeValue.trim()) { var p = document.createElement("p"); n.replaceWith(p); p.appendChild(n); }
+      });
+      ensureEnd();
+      if (selFig && !doc.contains(selFig)) unselect(); else placePop();
+    }
+
+    // ---------- 문서 ↔ 블록 ----------
+    function cleanInline(html) { return W.inlineHtml(html); }
+    function collect(container) {
+      var out = [], buf = [];
+      function flush() {
+        if (!buf.length) return;
+        var h = cleanInline(buf.join("")); buf = [];
+        if (!blank(h)) out.push({ t: "p", html: h });
+      }
+      Array.prototype.forEach.call(container.childNodes, function (c) {
+        var tag = c.nodeName;
+        if (c.nodeType === 3) { buf.push(esc(c.nodeValue)); return; }
+        if (c.nodeType !== 1) return;
+        if (INLINE[tag]) { buf.push(c.outerHTML); return; }
+        flush();
+        if (tag === "FIGURE" && c.dataset && c.dataset.key) {
+          var cap = c.querySelector("figcaption");
+          out.push({ t: "img", key: c.dataset.key, align: c.dataset.align || "full", cap: cap ? cap.textContent.trim() : "" });
+        } else if (/^H[1-6]$/.test(tag)) {
+          var tx = c.textContent.replace(/\s+/g, " ").trim(); if (tx) out.push({ t: "h", text: tx.slice(0, 60) });
+        } else if (tag === "UL" || tag === "OL") {
+          var items = Array.prototype.map.call(c.querySelectorAll("li"), function (li) { return cleanInline(li.innerHTML); })
+            .filter(function (x) { return !blank(x); });
+          if (items.length) out.push({ t: "list", items: items });
+        } else if ((tag === "DIV" && c.classList.contains("re-note")) || tag === "BLOCKQUOTE") {
+          var nh = cleanInline(c.innerHTML);
+          if (!blank(nh)) {
+            var lastB = out[out.length - 1];
+            if (lastB && lastB.t === "note") lastB.html += "<br>" + nh; else out.push({ t: "note", html: nh });
+          }
+        } else if (tag === "HR") {
+          out.push({ t: "hr" });
+        } else if (tag === "P") {
+          if (c.querySelector("figure,ul,ol,h1,h2,h3,h4,h5,h6,hr,div")) { var sub = collect(c); out.push.apply(out, sub); return; }
+          buf.push(c.innerHTML); flush();
+        } else if (tag === "IMG" || tag === "SCRIPT" || tag === "STYLE") {
+          return;
+        } else {
+          out.push.apply(out, collect(c));
+        }
+      });
+      flush();
+      return out;
+    }
+    function blocksToHtml(bs, forPaste) {
+      return bs.map(function (b) {
+        if (b.t === "p") return "<p>" + cleanInline(b.html) + "</p>";
+        if (b.t === "h") return "<h4>" + esc(b.text) + "</h4>";
+        if (b.t === "note") return '<div class="re-note">' + cleanInline(b.html) + "</div>";
+        if (b.t === "list") return "<ul>" + b.items.map(function (x) { return "<li>" + cleanInline(x) + "</li>"; }).join("") + "</ul>";
+        if (b.t === "hr") return "<hr>";
+        if (b.t === "img" && !forPaste && b.key) {
+          var d = document.createElement("div"); d.appendChild(makeFigFromKey(b.key, b.align, b.cap)); return d.innerHTML;
+        }
+        return "";
+      }).join("");
+    }
+    function makeFigFromKey(key, align, cap) {
+      var f = makeFig(pics[key], align, cap); delete pics[f.dataset.key]; f.dataset.key = key; return f;
+    }
+    function get(o) {
+      o = o || {};
+      var files = [], out = [];
+      collect(doc).forEach(function (b) {
+        if (b.t === "img") {
+          var v = pics[b.key], src = "";
+          if (typeof v === "string") src = v;
+          else if (v && v.file) {
+            if (o.preview) src = v.file.preview;
+            else if (!o.draft) { files.push({ name: v.file.name, data: v.file.data }); src = "upload:" + (files.length - 1); }
+          }
+          if (!src) return;
+          var x = { t: "img", src: src, align: b.align };
+          if (b.cap) x.cap = b.cap;
+          out.push(x);
+        } else out.push(b);
+      });
+      return { doc: out.length ? JSON.stringify({ v: 1, blocks: out }) : "", images: files };
+    }
+    function set(raw) {
+      unselect(); pics = {}; doc.textContent = "";
+      var d = W.parseDoc(raw);
+      if (!d) {
+        var t = String(raw == null ? "" : raw).trim();
+        d = { blocks: t ? t.split(/\n/).map(function (l) { return { t: "p", html: esc(l) }; }) : [] };
+      }
+      d.blocks.forEach(function (b) {
+        if (b.t === "img") { if (b.src) doc.appendChild(makeFig(b.src, b.align, b.cap)); return; }
+        if (b.t === "img2") { (b.src || []).forEach(function (u) { if (u) doc.appendChild(makeFig(u, "full", b.cap)); }); return; }
+        if (b.t === "btn") { var h = W.linkHref(b.url); if (b.label) doc.insertAdjacentHTML("beforeend", "<p>" + (h ? '<a href="' + esc(h) + '">' + esc(b.label) + "</a>" : esc(b.label)) + "</p>"); return; }
+        if (b.t === "list") { doc.insertAdjacentHTML("beforeend", blocksToHtml([{ t: "list", items: (b.items || []).map(function (x) { return String(x); }) }])); return; }
+        doc.insertAdjacentHTML("beforeend", blocksToHtml([b]));
+      });
+      ensureEnd();
+      refresh();
     }
 
     // ---------- 미리보기 ----------
     function setTab(previewOn) {
       tEdit.classList.toggle("is-on", !previewOn); tPrev.classList.toggle("is-on", previewOn);
       tEdit.setAttribute("aria-selected", String(!previewOn)); tPrev.setAttribute("aria-selected", String(previewOn));
-      list.hidden = previewOn; add.hidden = previewOn; bar.hidden = previewOn; linkRow.hidden = true; count.hidden = previewOn;
-      prev.hidden = !previewOn;
-      root.classList.toggle("is-preview", previewOn);
-      refresh();
-      if (previewOn && !prev.childNodes.length) prev.appendChild(el("p", "re-empty", "아직 넣은 내용이 없어요"));
+      stage.hidden = previewOn; bar.hidden = previewOn; linkRow.hidden = true; count.hidden = previewOn; prev.hidden = !previewOn;
+      unselect(); refresh();
+      if (previewOn && !prev.childNodes.length) prev.appendChild(el("p", "re-empty", "아직 쓴 내용이 없어요"));
     }
     tEdit.addEventListener("click", function () { setTab(false); });
     tPrev.addEventListener("click", function () { setTab(true); });
 
-    // ---------- 값 꺼내기 / 넣기 ----------
-    function imageCount() {
-      var n = 0;
-      blocks().forEach(function (node) {
-        var b = node._b;
-        if (b.t === "img" && b.pic) n++;
-        if (b.t === "img2") b.pics.forEach(function (p) { if (p) n++; });
-      });
-      return n;
-    }
-    function get(o) {
-      o = o || {};
-      var files = [], out = [];
-      function pic(v) {
-        if (!v) return "";
-        if (typeof v === "string") return v;
-        if (v.url) return v.url;
-        if (o.preview) return v.file.preview;
-        if (o.draft) return "";
-        files.push({ name: v.file.name, data: v.file.data });
-        return "upload:" + (files.length - 1);
-      }
-      blocks().forEach(function (node) {
-        var b = node._b, x = { t: b.t };
-        if (b.t === "p" || b.t === "note") { x.html = W.inlineHtml(b.html || ""); if (!x.html.replace(/<br>/g, "").trim()) return; }
-        if (b.t === "h") { x.text = String(b.text || "").trim(); if (!x.text) return; }
-        if (b.t === "img") { x.src = pic(b.pic); if (!x.src) return; x.align = b.align || "full"; if (b.cap) x.cap = b.cap.trim(); }
-        if (b.t === "img2") { x.src = b.pics.map(pic).filter(String); if (!x.src.length) return; if (b.cap) x.cap = b.cap.trim(); }
-        if (b.t === "btn") { x.label = String(b.label || "").trim(); x.url = String(b.url || "").trim(); if (!x.label && !x.url) return; }
-        if (b.t === "list") { x.items = (b.items || []).map(function (s) { return String(s).trim(); }).filter(String); if (!x.items.length) return; }
-        out.push(x);
-      });
-      return { doc: out.length ? JSON.stringify({ v: 1, blocks: out }) : "", images: files };
-    }
-    function set(raw) {
-      blocks().forEach(function (n) { n.remove(); });
-      lastBlock = null;
-      var d = W.parseDoc(raw);
-      if (!d) {
-        var t = String(raw == null ? "" : raw).trim();
-        d = { blocks: t ? [{ t: "p", html: t.split("\n").map(esc).join("<br>") }] : [] };
-      }
-      d.blocks.forEach(function (b) {
-        var x = { t: b.t };
-        if (!NAMES[b.t]) return;
-        if (b.t === "p" || b.t === "note") x.html = b.html;
-        if (b.t === "h") x.text = b.text;
-        if (b.t === "img") { x.pic = b.src || null; x.align = b.align; x.cap = b.cap; }
-        if (b.t === "img2") { x.pics = [(b.src || [])[0] || null, (b.src || [])[1] || null]; x.cap = b.cap; }
-        if (b.t === "btn") { x.label = b.label; x.url = b.url; }
-        if (b.t === "list") x.items = b.items;
-        list.appendChild(build(x));
-      });
-      lastBlock = null;
-      refresh();
-    }
-    function esc(s) { return s.replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-    function validate() {
-      var bad = null;
-      blocks().forEach(function (node) {
-        var b = node._b;
-        if (bad || b.t !== "btn") return;
-        var l = String(b.label || "").trim(), u = String(b.url || "").trim();
-        if ((l || u) && (!l || !W.linkHref(u))) bad = { node: node, msg: !l ? "버튼 글자를 써주세요" : "버튼 주소는 https://로 시작하는 주소나 이메일로 넣어주세요" };
-      });
-      if (bad) { setTab(false); var f = bad.node.querySelector(!String(bad.node._b.label || "").trim() ? "input" : "input:last-child"); if (f) f.focus(); }
-      return bad ? bad.msg : "";
+    function isEmpty() { return !doc.textContent.trim() && !imageCount() && !doc.querySelector("hr"); }
+    function refresh() {
+      doc.classList.toggle("is-empty", isEmpty() && doc.childNodes.length <= 1);
+      count.textContent = "본문 사진 " + imageCount() + " / " + maxImages + "장";
+      if (!prev.hidden) W.renderDetail(prev, get({ preview: true }).doc);
     }
 
-    refresh();
+    set("");
     return {
       set: set,
       get: get,
@@ -468,8 +556,8 @@
       text: function () { return W.docText(get({ preview: true }).doc); },
       isEmpty: function () { return !get({ preview: true }).doc; },
       imageCount: imageCount,
-      validate: validate,
-      focus: function () { var f = root.querySelector("[contenteditable],.re-add__btn"); if (f) f.focus(); },
+      validate: function () { return ""; },
+      focus: function () { doc.focus(); },
       showEdit: function () { setTab(false); }
     };
   };

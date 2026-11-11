@@ -189,16 +189,17 @@
     info.hidden = !info.children.length;
 
     var files = W.list(p["첨부이미지"]);
-    var box = $("attachList"); box.textContent = ""; box.hidden = true;
-    $("attachToggle").setAttribute("aria-expanded", "false");
-    $("attachToggle").textContent = "안내 이미지 보기";
+    var box = $("attachList"); box.textContent = "";
     var srcs = files.map(function (f) { return W.imgSrc(f); });
     srcs.forEach(function (src, k) {
       var b = el("button"); b.type = "button";
       b.setAttribute("aria-label", "안내 이미지 " + (k + 1) + " 크게 보기");
       var i = el("img"); i.src = src; i.alt = p["상품명"] + " 안내 이미지"; i.loading = "lazy";
       b.appendChild(i);
-      b.addEventListener("click", function () { openViewer(srcs, k, b); });
+      b.addEventListener("click", function () {
+        track("guide", p.id || p["상품명"], p["상품명"]);
+        openViewer(srcs, k, b);
+      });
       box.appendChild(b);
     });
     $("modalAttach").hidden = !files.length;
@@ -235,13 +236,6 @@
   }
   $("modalLink").addEventListener("click", inquire);
   $("modalLink").addEventListener("keydown", function (e) { if (curMail && (e.key === "Enter" || e.key === " ")) inquire(e); });
-  $("attachToggle").addEventListener("click", function () {
-    var open = $("attachList").hidden;
-    if (open && curProduct) track("guide", curProduct.id || curProduct["상품명"], curProduct["상품명"]);
-    $("attachList").hidden = !open;
-    this.setAttribute("aria-expanded", String(open));
-    this.textContent = open ? "안내 이미지 접기" : "안내 이미지 보기";
-  });
   function closeModal() { if (modal.close) modal.close(); else modal.removeAttribute("open"); }
 
   // ---------- 안내 이미지 확대 ----------

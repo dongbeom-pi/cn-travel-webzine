@@ -329,10 +329,10 @@
         if (n.nodeType !== 1) return;
         var tag = n.nodeName, x;
         if (tag === "BR") { out.appendChild(document.createElement("br")); return; }
-        if (tag === "B" || tag === "STRONG") { x = document.createElement("b"); walk(n, x); out.appendChild(x); return; }
+        if (tag === "B" || tag === "STRONG") { x = document.createElement("b"); walk(n, x); if (x.childNodes.length) out.appendChild(x); return; }
         if (tag === "A") {
           var h = linkHref(n.getAttribute("href"));
-          if (h) { x = document.createElement("a"); x.href = h; x.target = "_blank"; x.rel = "noopener"; walk(n, x); out.appendChild(x); }
+          if (h) { x = document.createElement("a"); x.href = h; x.target = "_blank"; x.rel = "noopener"; walk(n, x); if (x.childNodes.length) out.appendChild(x); }
           else walk(n, out);
           return;
         }
@@ -342,7 +342,7 @@
           if (cls.length || bold) {
             x = document.createElement(cls.length ? "span" : "b");
             if (cls.length) x.className = cls.join(" ");
-            walk(n, x); out.appendChild(x);
+            walk(n, x); if (x.childNodes.length) out.appendChild(x);
           } else walk(n, out);
           return;
         }
@@ -366,7 +366,7 @@
     return d.blocks.map(function (b) {
       if (b.t === "p" || b.t === "note") return inlineText(b.html);
       if (b.t === "h") return b.text || "";
-      if (b.t === "list") return (b.items || []).join("\n");
+      if (b.t === "list") return (b.items || []).map(inlineText).join("\n");
       if (b.t === "btn") return b.label || "";
       if (b.t === "img" || b.t === "img2") return b.cap || "";
       return "";
@@ -433,7 +433,7 @@
         a.href = h; a.target = "_blank"; a.rel = "noopener"; n.appendChild(a);
       } else if (b.t === "list") {
         var items = (b.items || []).filter(function (x) { return String(x).trim(); }); if (!items.length) return;
-        n = el("ul", "rd-list"); items.forEach(function (x) { n.appendChild(el("li", "", x)); });
+        n = el("ul", "rd-list"); items.forEach(function (x) { var li = el("li"); li.appendChild(sanitizeInline(x)); n.appendChild(li); });
       } else if (b.t === "hr") {
         n = el("hr", "rd-hr");
       }
