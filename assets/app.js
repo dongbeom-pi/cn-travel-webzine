@@ -41,7 +41,12 @@
 
   // ---------- 공유 ----------
   function toast(msg) {
-    var t = $("toast"); t.textContent = msg; t.hidden = false;
+    var t = $("toast");
+    // 팝업이 열려 있으면 알림을 팝업 안으로 옮겨야 앞에 보여요
+    var host = document.querySelector("dialog[open]") || document.body;
+    if (t.parentNode !== host) host.appendChild(t);
+    t.classList.toggle("toast--in", host !== document.body);
+    t.textContent = msg; t.hidden = false;
     clearTimeout(toast._t); toast._t = setTimeout(function () { t.hidden = true; }, 2400);
   }
   function shareUrl(productId) {
@@ -59,18 +64,25 @@
       try { document.execCommand("copy") ? res() : rej(); } catch (e) { rej(e); } finally { ta.remove(); }
     });
   }
-  function share(title, text, url, target) {
+  function done(btn) {
+    if (!btn) return;
+    if (!btn._html) btn._html = btn.innerHTML;
+    btn.classList.add("is-done");
+    btn.innerHTML = btn.id === "shareBtn" ? "✓ 복사했어요" : '<span aria-hidden="true" style="font-size:20px;font-weight:800">✓</span>';
+    clearTimeout(btn._t); btn._t = setTimeout(function () { btn.classList.remove("is-done"); btn.innerHTML = btn._html; }, 2000);
+  }
+  function share(title, text, url, target, btn) {
     track("share", target || "", title);
     var mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (navigator.share && mobile) {
       navigator.share({ title: title, text: text, url: url }).catch(function () { /* 닫음 */ });
       return;
     }
-    copyText(url).then(function () { toast("링크를 복사했어요. 카톡이나 메일에 붙여넣어 보내세요"); })
+    copyText(url).then(function () { done(btn); toast("링크를 복사했어요. 카톡이나 메일에 붙여넣어 보내세요"); })
       .catch(function () { window.prompt("아래 링크를 복사해 주세요", url); });
   }
   $("shareBtn").addEventListener("click", function () {
-    share((CFG.title || "씨앤 트래블 매거진") + " " + CUR.no + "호", CUR.title, shareUrl(""));
+    share((CFG.title || "씨앤 트래블 매거진") + " " + CUR.no + "호", CUR.title, shareUrl(""), "", this);
   });
 
   // ---------- 커버 ----------
@@ -224,7 +236,7 @@
   }
   $("modalShare").addEventListener("click", function () {
     if (!curProduct) return;
-    share(curProduct["상품명"], curProduct["한줄설명"] || CUR.title, shareUrl(curProduct.id), curProduct.id);
+    share(curProduct["상품명"], curProduct["한줄설명"] || CUR.title, shareUrl(curProduct.id), curProduct.id, this);
   });
   function inquire(e) {
     if (curProduct) track("inquiry", curProduct.id || curProduct["상품명"], curProduct["상품명"]);

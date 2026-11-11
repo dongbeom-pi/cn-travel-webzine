@@ -588,3 +588,8 @@ button{font-family:inherit}
 .mail-row .input{flex:1;min-width:0}
 .mail-frame{display:block;width:100%;height:560px;margin-top:8px;border:1px solid var(--g200);border-radius:16px;background:#F2F4F6}
 .notice--warn{margin:16px 0 0;padding:12px 16px;border-radius:12px;background:#FFF4E5;color:#8A4B00;font-size:15px;line-height:22px}
+.toast{max-width:calc(100% - 32px);text-align:center;animation:toastIn .2s ease-out}
+.toast--in{bottom:104px}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+.share-btn.is-done,#modalShare.is-done{background:var(--green-l);color:var(--green)}
+@media (prefers-reduced-motion:reduce){.toast{animation:none}}
