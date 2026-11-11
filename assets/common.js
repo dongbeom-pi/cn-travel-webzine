@@ -253,7 +253,7 @@
         var card = el("div", "pthumb");
         var fig = el("div", "pthumb__img");
         var img = el("img"); img.src = it.src; img.alt = ""; fig.appendChild(img);
-        if (i === 0) fig.appendChild(el("span", "pthumb__badge", "대표"));
+        if (i === 0 && o.badge !== false) fig.appendChild(el("span", "pthumb__badge", "대표"));
         card.appendChild(fig);
         var bar = el("div", "pthumb__bar");
         function mk(label, html, fn, dis) {

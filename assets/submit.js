@@ -4,7 +4,7 @@
   var W = window.WZ, el = W.el;
   var $ = function (id) { return document.getElementById(id); };
   var form = $("form"), steps = form.querySelectorAll(".step"), TOTAL = steps.length;
-  var step = 1, attachments = [], sending = false, photoSet = null, editor = null;
+  var step = 1, sending = false, photoSet = null, guideSet = null, editor = null;
   var DRAFT_KEY = "wz-submit-draft";
 
   if (!W.CFG.apiUrl) $("noApi").hidden = false;
@@ -135,7 +135,7 @@
     var d = data(), r = $("review"); r.textContent = "";
     [["부서 · 담당자", d.dept + " · " + d.name], ["연락처", d.contact], ["카테고리", d.category], ["상품명", d.title],
      ["한 줄 설명", d.summary], ["자세한 설명", W.docText(d.detail).slice(0, 300) + (editor.imageCount() ? "\n(본문 사진 " + editor.imageCount() + "장)" : "")], ["가격", W.price(d.price)],
-     ["마감일", d.deadline || "없음"], ["사진", (photoSet.count() ? "상품 사진 " + photoSet.count() + "장" : "") + (attachments.length ? " · 안내 이미지 " + attachments.length + "장" : "")]]
+     ["마감일", d.deadline || "없음"], ["사진", (photoSet.count() ? "상품 사진 " + photoSet.count() + "장" : "") + (guideSet.count() ? " · 안내 이미지 " + guideSet.count() + "장" : "")]]
       .forEach(function (row) {
         var div = el("div"); div.appendChild(el("dt", "", row[0])); div.appendChild(el("dd", "", row[1])); r.appendChild(div);
       });
@@ -177,7 +177,7 @@
     d.detail = g.doc; d.detailImages = g.images;
     d.photos = photoSet.payload();
     d.photo = d.photos[0]; // 이전 버전 서버 호환
-    d.attachments = attachments.map(function (a) { return { name: a.name, data: a.data }; });
+    d.attachments = guideSet.payload();   // 순서 그대로 (새로 올린 이미지만 있어요)
     W.api("submit", d).then(function (res) {
       clearDraft();
       form.querySelectorAll(".step").forEach(function (s) { s.hidden = true; });
@@ -193,37 +193,12 @@
   }
 
   // ---------- 사진 ----------
-  function thumb(box, item, onRemove, wide) {
-    var t = el("div", "thumb" + (wide ? " thumb--wide" : ""));
-    var i = el("img"); i.src = item.preview; i.alt = ""; t.appendChild(i);
-    var b = el("button", "", "×"); b.type = "button"; b.setAttribute("aria-label", "사진 지우기");
-    b.addEventListener("click", onRemove); t.appendChild(b);
-    box.appendChild(t);
-  }
-  function renderPhotos() {
-    $("attachThumbs").textContent = "";
-    attachments.forEach(function (a, i) {
-      thumb($("attachThumbs"), a, function () { attachments.splice(i, 1); renderPhotos(); });
-    });
-    $("attachDrop").hidden = attachments.length >= 3;
-    updatePreview();
-  }
   function showErr(msg) { $("formError").textContent = msg; $("formError").hidden = false; }
   photoSet = W.photoSet({ thumbs: $("photoThumb"), drop: $("photoDrop"), input: $("photo"), max: 5,
     onChange: function () { var er = $("photoDrop").parentNode.querySelector(".field__error"); if (er && photoSet && photoSet.count()) er.remove(); updatePreview(); },
     onError: function (m) { showErr(m); } });
-  $("attach").addEventListener("change", function () {
-    var fs = Array.prototype.slice.call(this.files, 0, 3 - attachments.length); this.value = "";
-    Promise.all(fs.map(function (f) { return W.resizeImage(f, 1400); }))
-      .then(function (rs) { attachments = attachments.concat(rs); renderPhotos(); })
-      .catch(function (e) { showErr(e.message); });
-  });
-  ["attachDrop"].forEach(function (id) {
-    var z = $(id);
-    z.addEventListener("dragover", function () { z.classList.add("is-drag"); });
-    z.addEventListener("dragleave", function () { z.classList.remove("is-drag"); });
-    z.addEventListener("drop", function () { z.classList.remove("is-drag"); });
-  });
+  guideSet = W.photoSet({ thumbs: $("attachThumbs"), drop: $("attachDrop"), input: $("attach"), max: 3, maxW: 1400, badge: false,
+    onChange: function () { updatePreview(); }, onError: function (m) { showErr(m); } });
 
   // ---------- 입력 반응 ----------
   form.addEventListener("input", function (e) {

@@ -378,7 +378,9 @@
   });
 
   // ---------- 상품 ----------
-  var prod = { id: "", attach: [], newAttach: [] };
+  var prod = { id: "" };
+  var guideSet = W.photoSet({ thumbs: $("pAttachThumbs"), drop: $("pAttachDrop"), input: $("pAttach"), urlInput: $("pAttachUrl"), max: 5, maxW: 1400, badge: false,
+    onError: function (m) { showErr("pError", m); } });
   var prodSet = W.photoSet({ thumbs: $("pPhotoThumb"), drop: $("pPhotoDrop"), input: $("pPhoto"), urlInput: $("pPhotoUrl"), max: 5,
     onError: function (m) { showErr("pError", m); } });
   var detailEd = W.richEditor($("pDetail"), { maxImages: 10, onError: function (m) { showErr("pError", m); } });
@@ -392,7 +394,8 @@
     if (cur) sel.value = cur;
   }
   function editProduct(p) {
-    prod = { id: p ? p.id : "", attach: p ? W.list(p["첨부이미지"]) : [], newAttach: [] };
+    prod = { id: p ? p.id : "" };
+    guideSet.set(p ? p["첨부이미지"] : "");
     prodSet.set(p ? p["사진"] : "");
     issueOptions($("pIssue"), p ? num(p["호수"]) : S.cur);
     $("pCat").value = p ? p["카테고리"] || "" : "";
@@ -405,27 +408,16 @@
     $("pLink").value = p ? p["링크"] || "" : "";
     $("pTitle").textContent = p ? "상품 고치기" : "상품 추가";
     $("pError").hidden = true;
-    fillProdPhotos(); counts();
+    counts();
     openModal("productModal");
   }
-  function fillProdPhotos() {
-    var box = $("pAttachThumbs"); box.textContent = "";
-    prod.attach.forEach(function (u, i) { thumbItem(box, W.imgSrc(u), function () { prod.attach.splice(i, 1); fillProdPhotos(); }); });
-    prod.newAttach.forEach(function (a, i) { thumbItem(box, a.preview, function () { prod.newAttach.splice(i, 1); fillProdPhotos(); }); });
-  }
   $("addProduct").addEventListener("click", function () { editProduct(null); });
-  $("pAttach").addEventListener("change", function () {
-    var fs = Array.prototype.slice.call(this.files, 0, 5); this.value = "";
-    Promise.all(fs.map(function (f) { return W.resizeImage(f, 1400); }))
-      .then(function (rs) { prod.newAttach = prod.newAttach.concat(rs); fillProdPhotos(); })
-      .catch(function (e) { showErr("pError", e.message); });
-  });
   $("pSubmit").addEventListener("click", function () {
     var row = {
       id: prod.id, "호수": $("pIssue").value, "카테고리": $("pCat").value.trim(), "상품명": $("pName").value.trim(),
       "한줄설명": $("pSummary").value.trim(), "가격": $("pPrice").value.replace(/[^0-9]/g, ""), "마감일": $("pDeadline").value,
       "링크": $("pLink").value.trim(),
-      "첨부이미지": prod.attach.join(", ")
+      "첨부이미지": guideSet.payload().filter(function (x) { return typeof x === "string"; }).join(", ")
     };
     if (!num(row["호수"])) return showErr("pError", "실을 호를 골라주세요. 호가 없으면 먼저 만들어 주세요.");
     if (!row["상품명"]) return showErr("pError", "상품명을 써주세요.");
@@ -438,7 +430,8 @@
     call("saveRow", {
       table: "상품", row: row,
       photos: prodSet.payload(), detailImages: dg.images,
-      attachments: prod.newAttach.map(function (a) { return { name: a.name, data: a.data }; })
+      guides: guideSet.payload(),   // 새 서버: 순서 그대로 저장
+      attachments: guideSet.payload().filter(function (x) { return typeof x !== "string"; })   // 예전 서버용
     }).then(function () { closeModal("productModal"); S.cur = num(row["호수"]); toast("상품을 저장했어요"); return load(); })
       .catch(function (e) { showErr("pError", e.message); }).then(done);
   });
