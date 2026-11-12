@@ -27,7 +27,7 @@
 <meta name="theme-color" content="#FFFFFF">
 <link rel="icon" href="/images/cn-symbol.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="/assets/style.css?v=20261112c">
+<link rel="stylesheet" href="/assets/style.css?v=20261112d">
 </head>
 <body>
 <div class="page">
@@ -94,11 +94,9 @@
               <span class="howto__no" aria-hidden="true">2</span>
               <strong>메일에 이것만 적어주세요</strong>
               <ul class="howto__check">
-                <li>상품명</li>
-                <li>출발하고 싶은 날짜 (여러 개도 좋아요)</li>
-                <li>인원 (어른 몇 명 · 아이는 나이까지)</li>
-                <li>방 배정 (2인 1실, 혼자 쓰기 등)</li>
+                <li>상품명과 궁금한 점</li>
                 <li>회사명 · 이름 · 연락처</li>
+                <li>여행 상품이라면 출발 희망일 · 인원(아이는 나이까지) · 방 배정</li>
               </ul>
             </li>
             <li>
@@ -176,7 +174,7 @@
     <p class="modal__price" id="modalPrice"></p>
     <dl class="infobox" id="modalInfo" hidden></dl>
     <div class="ask" id="modalAsk" hidden>
-      <p class="ask__text">메일에 <b>출발 희망일 · 인원 · 방 배정 · 연락처</b>를 적어 보내주세요. 양식을 복사해서 빈칸만 채우면 돼요.</p>
+      <p class="ask__text" id="askText"></p>
       <button class="btn btn--soft btn--sm" type="button" id="copyForm">문의 양식 복사</button>
     </div>
     <div class="attach" id="modalAttach" hidden>
@@ -212,8 +210,8 @@
 
 <div class="toast" id="toast" role="status" hidden></div>
 
-<script src="/config.js?v=20261112c"></script>
-<script src="/assets/common.js?v=20261112c"></script>
-<script src="/assets/app.js?v=20261112c"></script>
+<script src="/config.js?v=20261112d"></script>
+<script src="/assets/common.js?v=20261112d"></script>
+<script src="/assets/app.js?v=20261112d"></script>
 </body>
 </html>

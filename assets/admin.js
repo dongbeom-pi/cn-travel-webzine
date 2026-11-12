@@ -331,7 +331,7 @@
 
   // ---------- 안내 메일 ----------
   var mail = null;
-  var SITE = CFG.siteUrl || "https://cn-travel-magazine.vercel.app/";
+  var SITE = W.CFG.siteUrl || "https://cn-travel-magazine.vercel.app/";
   $("edMail").addEventListener("click", function () {
     var it = issueOf(S.cur); if (!it) return;
     var ps = ofIssue(S.products, S.cur);
@@ -406,6 +406,7 @@
     $("pDeadline").value = d ? d[1] + "-" + ("0" + d[2]).slice(-2) + "-" + ("0" + d[3]).slice(-2) : "";
     detailEd.set(p ? p["상세설명"] || "" : ""); detailEd.showEdit();
     $("pLink").value = p ? p["링크"] || "" : "";
+    $("pForm").value = (p && ["여행", "간단", "없음"].indexOf(p["문의양식"]) > -1) ? p["문의양식"] : "간단";
     $("pTitle").textContent = p ? "상품 고치기" : "상품 추가";
     $("pError").hidden = true;
     counts();
@@ -416,7 +417,7 @@
     var row = {
       id: prod.id, "호수": $("pIssue").value, "카테고리": $("pCat").value.trim(), "상품명": $("pName").value.trim(),
       "한줄설명": $("pSummary").value.trim(), "가격": $("pPrice").value.replace(/[^0-9]/g, ""), "마감일": $("pDeadline").value,
-      "링크": $("pLink").value.trim(),
+      "링크": $("pLink").value.trim(), "문의양식": $("pForm").value,
       "첨부이미지": guideSet.payload().filter(function (x) { return typeof x === "string"; }).join(", ")
     };
     if (!num(row["호수"])) return showErr("pError", "실을 호를 골라주세요. 호가 없으면 먼저 만들어 주세요.");

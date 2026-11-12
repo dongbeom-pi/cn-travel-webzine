@@ -182,7 +182,7 @@
 
   // ---------- 상세 팝업 ----------
   var modal = $("productModal"), lastFocus = null;
-  var curProduct = null, curMail = "";
+  var curProduct = null, curMail = "", curForm = "간단";
   function openProduct(p, from) {
     lastFocus = from; curProduct = p;
     track("product", p.id || p["상품명"], p["상품명"]);
@@ -223,7 +223,12 @@
     var link = $("modalLink");
     curMail = /^mailto:/i.test(u) ? decodeURIComponent(u.replace(/^mailto:/i, "").split("?")[0]) : "";
     link.hidden = !u;
-    $("modalAsk").hidden = !curMail;
+    // 문의 양식: 상품마다 여행용 / 간단 / 없음 (비어 있으면 간단)
+    curForm = ["여행", "간단", "없음"].indexOf(p["문의양식"]) > -1 ? p["문의양식"] : "간단";
+    $("modalAsk").hidden = !curMail || curForm === "없음";
+    $("askText").innerHTML = curForm === "여행"
+      ? "메일에 <b>출발 희망일 · 인원 · 방 배정 · 연락처</b>를 적어 보내주세요. 양식을 복사해서 빈칸만 채우면 돼요."
+      : "메일에 <b>회사명 · 연락처</b>와 <b>궁금한 점</b>을 적어 보내주세요. 양식을 복사해서 빈칸만 채우면 돼요.";
     if (curMail) {
       link.removeAttribute("href"); link.removeAttribute("target"); link.setAttribute("role", "button"); link.tabIndex = 0;
       link.textContent = "메일 주소 복사";
@@ -255,17 +260,16 @@
   $("copyForm").addEventListener("click", function () {
     if (!curProduct) return;
     var btn = this;
-    var t = [
-      "[문의] " + (curProduct["상품명"] || ""),
-      "",
+    var t = ["[문의] " + (curProduct["상품명"] || ""), ""].concat(curForm === "여행" ? [
       "· 출발 희망일: ",
       "· 인원: 어른 _명 / 아이 _명 (아이 나이: )",
       "· 방 배정: 2인 1실 / 혼자 쓰기 / 기타",
       "· 회사명 / 이름 / 연락처: ",
-      "· 궁금한 점: ",
-      "",
-      "(씨앤 트래블 매거진 " + CUR.no + "호를 보고 문의드려요)"
-    ].join("\n");
+      "· 궁금한 점: "
+    ] : [
+      "· 회사명 / 이름 / 연락처: ",
+      "· 문의 내용: "
+    ]).concat(["", "(씨앤 트래블 매거진 " + CUR.no + "호를 보고 문의드려요)"]).join("\n");
     track("inquiry", curProduct.id || curProduct["상품명"], curProduct["상품명"]);
     copyText(t).then(function () {
       done(btn);

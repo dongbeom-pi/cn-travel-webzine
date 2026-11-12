@@ -21,7 +21,8 @@
       dept: val("dept"), name: val("name"), contact: val("contact"),
       category: category(), title: val("title"), summary: val("summary"), detail: editor ? editor.get({ preview: true }).doc : "",
       price: $("priceAsk").checked ? "" : val("price").replace(/[^0-9]/g, ""),
-      deadline: val("deadline"), link: val("link"), wish: val("wish")
+      deadline: val("deadline"), link: val("link"), wish: val("wish"),
+      form: (form.querySelector('input[name="form"]:checked') || {}).value || "간단"
     };
   }
 
@@ -135,7 +136,8 @@
     var d = data(), r = $("review"); r.textContent = "";
     [["부서 · 담당자", d.dept + " · " + d.name], ["연락처", d.contact], ["카테고리", d.category], ["상품명", d.title],
      ["한 줄 설명", d.summary], ["자세한 설명", W.docText(d.detail).slice(0, 300) + (editor.imageCount() ? "\n(본문 사진 " + editor.imageCount() + "장)" : "")], ["가격", W.price(d.price)],
-     ["마감일", d.deadline || "없음"], ["사진", (photoSet.count() ? "상품 사진 " + photoSet.count() + "장" : "") + (guideSet.count() ? " · 안내 이미지 " + guideSet.count() + "장" : "")]]
+     ["마감일", d.deadline || "없음"], ["사진", (photoSet.count() ? "상품 사진 " + photoSet.count() + "장" : "") + (guideSet.count() ? " · 안내 이미지 " + guideSet.count() + "장" : "")],
+     ["문의", (d.link || "-") + " · 문의 양식 " + ({ "여행": "여행용", "간단": "간단", "없음": "넣지 않기" }[d.form] || "간단")]]
       .forEach(function (row) {
         var div = el("div"); div.appendChild(el("dt", "", row[0])); div.appendChild(el("dd", "", row[1])); r.appendChild(div);
       });
