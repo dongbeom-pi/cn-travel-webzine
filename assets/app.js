@@ -68,7 +68,7 @@
     if (!btn) return;
     if (!btn._html) btn._html = btn.innerHTML;
     btn.classList.add("is-done");
-    btn.innerHTML = btn.id === "shareBtn" ? "✓ 복사했어요" : '<span aria-hidden="true" style="font-size:20px;font-weight:800">✓</span>';
+    btn.innerHTML = btn.id !== "modalShare" ? "✓ 복사했어요" : '<span aria-hidden="true" style="font-size:20px;font-weight:800">✓</span>';
     clearTimeout(btn._t); btn._t = setTimeout(function () { btn.classList.remove("is-done"); btn.innerHTML = btn._html; }, 2000);
   }
   function share(title, text, url, target, btn) {
@@ -220,6 +220,7 @@
     var link = $("modalLink");
     curMail = /^mailto:/i.test(u) ? decodeURIComponent(u.replace(/^mailto:/i, "").split("?")[0]) : "";
     link.hidden = !u;
+    $("modalAsk").hidden = !curMail;
     if (curMail) {
       link.removeAttribute("href"); link.removeAttribute("target"); link.setAttribute("role", "button"); link.tabIndex = 0;
       link.textContent = "메일 주소 복사";
@@ -247,6 +248,27 @@
     }
   }
   $("modalLink").addEventListener("click", inquire);
+  // 문의 양식: 상품명이 들어간 메일 내용을 복사
+  $("copyForm").addEventListener("click", function () {
+    if (!curProduct) return;
+    var btn = this;
+    var t = [
+      "[문의] " + (curProduct["상품명"] || ""),
+      "",
+      "· 출발 희망일: ",
+      "· 인원: 어른 _명 / 아이 _명 (아이 나이: )",
+      "· 방 배정: 2인 1실 / 혼자 쓰기 / 기타",
+      "· 회사명 / 이름 / 연락처: ",
+      "· 궁금한 점: ",
+      "",
+      "(씨앤 트래블 매거진 " + CUR.no + "호를 보고 문의드려요)"
+    ].join("\n");
+    track("inquiry", curProduct.id || curProduct["상품명"], curProduct["상품명"]);
+    copyText(t).then(function () {
+      done(btn);
+      toast("양식을 복사했어요. 받는 사람: " + curMail);
+    }, function () { toast("복사하지 못했어요. 받는 사람: " + curMail); });
+  });
   $("modalLink").addEventListener("keydown", function (e) { if (curMail && (e.key === "Enter" || e.key === " ")) inquire(e); });
   function closeModal() { if (modal.close) modal.close(); else modal.removeAttribute("open"); }
 

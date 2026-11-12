@@ -8,7 +8,7 @@
    ========================================================= */
 :root{
   --text:#191F28; --g700:#4E5968; --g600:#5F6A77; --g300:#D1D6DB; --g200:#E5E8EB; --g100:#F2F4F6; --g50:#F9FAFB;
-  --blue:#0072B9; --blue-d:#005A93; --blue-l:#E8F3FB; --red:#BE2A30; --red-l:#FDECEC; --green:#0E8A5F; --green-l:#E6F6EF;
+  --blue:#0072B9; --blue-d:#005A93; --blue-l:#E8F3FB; --red:#BE2A30; --red-l:#FDECEC; --green:#0A7A4D; --green-l:#E6F6EF;
   --font:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   --wrap:1040px; --pad:24px;
 }
@@ -601,3 +601,31 @@ button{font-family:inherit}
 .viewer__zl:hover{background:rgba(255,255,255,.14)}
 .viewer__hint{transition:opacity .4s}
 .viewer__hint.is-gone{opacity:0;pointer-events:none}
+
+/* 문의 방법 */
+.howto{margin-top:48px;padding:40px;border-radius:28px;background:var(--g50)}
+.howto__title{margin:0;font-size:22px;line-height:30px;font-weight:800;letter-spacing:-.5px}
+.howto__desc{margin:8px 0 0;font-size:16px;line-height:25px;color:var(--g700)}
+.howto__steps{margin:24px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.howto__steps > li{padding:24px;border-radius:20px;background:#fff}
+.howto__no{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;font-size:15px;font-weight:800}
+.howto__steps strong{display:block;margin-top:14px;font-size:17px;line-height:25px;font-weight:700}
+.howto__steps p{margin:8px 0 0;font-size:15px;line-height:23px;color:var(--g700)}
+.howto__steps b{color:var(--text);font-weight:700}
+.howto__check{margin:10px 0 0;padding:0;list-style:none}
+.howto__check li{position:relative;padding:3px 0 3px 24px;font-size:15px;line-height:22px;color:var(--g700)}
+.howto__check li::before{content:"";position:absolute;left:2px;top:8px;width:13px;height:7px;border-left:2.5px solid var(--blue);border-bottom:2.5px solid var(--blue);transform:rotate(-45deg)}
+.howto__call{margin:18px 0 0;font-size:15px;line-height:22px;color:var(--g700)}
+.howto__call a{color:var(--blue);font-weight:700}
+.ask{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:14px 16px;border-radius:16px;background:var(--blue-l)}
+.ask__text{margin:0;font-size:14px;line-height:21px;color:var(--g700)}
+.ask__text b{color:var(--text)}
+.ask .btn{flex:none;background:#fff;color:var(--blue)}
+.ask .btn.is-done{background:#fff;color:#0A7A4D}
+@media (max-width:760px){
+  .howto{margin-top:32px;padding:24px 20px;border-radius:24px}
+  .howto__title{font-size:20px;line-height:28px}
+  .howto__steps{grid-template-columns:1fr}
+  .howto__steps > li{padding:20px}
+  .ask{flex-direction:column;align-items:stretch}
+}
