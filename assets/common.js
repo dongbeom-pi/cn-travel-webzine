@@ -100,7 +100,7 @@
     var ph = el("div", "ph");
     if (!src) { box.appendChild(ph); return; }
     var img = el("img");
-    img.src = src; img.alt = alt || ""; img.loading = "lazy";
+    img.src = src; img.alt = alt || ""; img.loading = "lazy"; img.decoding = "async";
     img.onerror = function () { box.textContent = ""; box.appendChild(ph); };
     box.appendChild(img);
   }

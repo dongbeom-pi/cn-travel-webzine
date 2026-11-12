@@ -1,0 +1,29 @@
+# 1시간마다 공개 시트를 확인해서, 바뀐 게 있으면 지문 파일을 커밋해요.
+# 커밋이 올라가면 Vercel이 다시 배포하면서 검색용 페이지(호·상품·sitemap)를 새로 만들어요.
+name: 검색용 페이지 갱신
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 시트 지문 만들기
+        run: node scripts/build-seo.mjs --hash
+      - name: 바뀌었으면 커밋
+        run: |
+          if git diff --quiet seo/sheet-hash.txt 2>/dev/null && git ls-files --error-unmatch seo/sheet-hash.txt >/dev/null 2>&1; then
+            echo "바뀐 내용 없음"; exit 0
+          fi
+          git config user.name "ctm-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add seo/sheet-hash.txt
+          git commit -m "검색용 페이지 갱신 (시트 변경)"
+          git push

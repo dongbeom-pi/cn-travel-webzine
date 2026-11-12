@@ -14,5 +14,8 @@ window.WEBZINE_CONFIG = {
   contact: "T. 1600-3630 · biz@cncorp.kr",
 
   // 사진 폴더 (사진 칸에 파일 이름만 쓴 경우)
-  imageFolder: "images/"
+  imageFolder: "/images/",
+
+  // 대표 주소 (공유·메일·검색엔진용)
+  siteUrl: "https://cn-travel-magazine.vercel.app/"
 };

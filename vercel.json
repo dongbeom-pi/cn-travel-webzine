@@ -1,0 +1,13 @@
+{
+  "buildCommand": "node scripts/build-seo.mjs",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/issues/:no", "destination": "/index.html" },
+    { "source": "/issues/:no/", "destination": "/index.html" },
+    { "source": "/products/:id", "destination": "/index.html" },
+    { "source": "/products/:id/", "destination": "/index.html" }
+  ],
+  "headers": [
+    { "source": "/(sitemap.xml|rss.xml|robots.txt)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=600" }] }
+  ]
+}

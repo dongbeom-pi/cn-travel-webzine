@@ -4,6 +4,11 @@
   "use strict";
   var W = window.WZ, CFG = W.CFG, el = W.el, num = W.num;
   var params = new URLSearchParams(location.search);
+  // 깔끔한 주소: /issues/3/ → 3호, /products/ID/ → 그 상품
+  var route = (location.pathname.match(/\/issues\/(\d+)/) || [])[1];
+  var routeP = decodeURIComponent((location.pathname.match(/\/products\/([^/]+)/) || [])[1] || "");
+  var SITE = (CFG.siteUrl || location.origin + "/").replace(/\/?$/, "/");
+  if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) SITE = location.origin + "/";
   var PREVIEW = params.get("preview") === "1";
   var $ = function (id) { return document.getElementById(id); };
 
@@ -50,11 +55,8 @@
     clearTimeout(toast._t); toast._t = setTimeout(function () { t.hidden = true; }, 2400);
   }
   function shareUrl(productId) {
-    // 공유 링크는 항상 대표 주소(canonical)로 — 예전 주소로 들어온 사람이 공유해도 새 주소로 나가요
-    var can = document.querySelector('link[rel="canonical"]');
-    var local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
-    var base = can && !local ? can.href : location.origin + location.pathname.replace(/index\.html$/, "");
-    return base + "?no=" + CUR.no + (productId ? "&p=" + encodeURIComponent(productId) : "") + "&ref=share";
+    // 공유 링크는 항상 대표 주소의 깔끔한 주소로 (검색엔진이 읽는 페이지와 같아요)
+    return SITE + (productId ? "products/" + encodeURIComponent(productId) + "/" : "issues/" + CUR.no + "/") + "?ref=share";
   }
   function copyText(text) {
     if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
@@ -93,7 +95,8 @@
     W.slider($("coverMedia"), W.photos(issue["커버사진"]), { alt: issue["커버제목"], auto: 5000 });
     var u = W.safeUrl(issue["커버링크"]);
     if (u) { $("coverLink").href = u; $("coverLink").hidden = false; $("coverLink").onclick = function () { track("cover", "", issue["커버제목"]); }; }
-    document.title = issue["커버제목"] + " | " + (CFG.title || "씨앤 트래블 매거진");
+    // 미리 만든 페이지는 제목이 이미 페이지마다 달라요 (검색엔진용) → 그대로 둬요
+    if (!document.querySelector(".seo")) document.title = issue["커버제목"] + " | " + (CFG.title || "씨앤 트래블 매거진");
     show("cover");
   }
 
@@ -165,8 +168,8 @@
     if (!others.length) { $("toArchive").hidden = true; return; }
     others.forEach(function (it) {
       var a = el("a");
-      a.href = "?no=" + num(it["호수"]) + (PREVIEW ? "&preview=1" : "");
-      var th = el("span", "archive__thumb"); W.media(th, W.sized(W.firstImg(it["커버사진"]), 400), "");
+      a.href = PREVIEW ? "/?no=" + num(it["호수"]) + "&preview=1" : "/issues/" + num(it["호수"]) + "/";
+      var th = el("span", "archive__thumb"); W.media(th, W.sized(W.firstImg(it["커버사진"]), 400), it["커버제목"] || (num(it["호수"]) + "호 커버"));
       var tx = el("span");
       tx.appendChild(el("span", "archive__meta t-cap c-sub", issueLabel(it)));
       tx.appendChild(el("span", "archive__title", it["커버제목"]));
@@ -408,7 +411,12 @@
         $("toArchive").hidden = true;
         return;
       }
-      var want = num(params.get("no"));
+      var pid = params.get("p") || routeP;
+      var want = num(params.get("no") || route);
+      if (!want && pid) {   // 상품 주소만 있으면 그 상품이 실린 호를 찾아요
+        var owner = d[1].filter(function (p) { return p.id === pid; })[0];
+        if (owner) want = num(owner["호수"]);
+      }
       var issue = issues.filter(function (r) { return num(r["호수"]) === want; })[0] || issues[0];
       var no = num(issue["호수"]);
       $("state").hidden = true;
@@ -422,7 +430,6 @@
       renderNews(d[3].filter(sameIssue(no)).sort(byOrder));
       renderArchive(issues, no);
       // 상품 링크로 들어온 경우 그 상품을 바로 열기
-      var pid = params.get("p");
       if (pid) {
         var hit = products.filter(function (p) { return p.id === pid; })[0];
         var idx = products.indexOf(hit);

@@ -331,7 +331,7 @@
 
   // ---------- 안내 메일 ----------
   var mail = null;
-  var SITE = (document.querySelector('link[rel="canonical"]') || {}).href || "https://cn-travel-magazine.vercel.app/";
+  var SITE = CFG.siteUrl || "https://cn-travel-magazine.vercel.app/";
   $("edMail").addEventListener("click", function () {
     var it = issueOf(S.cur); if (!it) return;
     var ps = ofIssue(S.products, S.cur);

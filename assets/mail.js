@@ -31,14 +31,14 @@
     var week = it["주차표기"] || "";
     var title = it["커버제목"] || "이번 호가 나왔어요";
     var intro = it["커버소개"] || "";
-    var issueUrl = base + "?no=" + no + "&ref=mail";
+    var issueUrl = base + "issues/" + no + "/?ref=mail";
     var cover = fit(abs(W.firstImg(it["커버사진"]), base), 1104);
     var ps = o.products || [];
     var subject = "(광고) 씨앤 트래블 매거진 " + (week ? week + " · " : "") + title;
     var pre = intro ? intro.slice(0, 60) : title;
 
     var rows = ps.map(function (p) {
-      var url = base + "?no=" + no + "&p=" + encodeURIComponent(p.id || "") + "&ref=mail";
+      var url = p.id ? base + "products/" + encodeURIComponent(p.id) + "/?ref=mail" : issueUrl;
       var img = fit(abs(W.firstImg(p["사진"]), base), 240, 180);
       var dl = W.deadline(p["마감일"]);
       var chips = esc(p["카테고리"] || "") + (dl && dl.state !== "closed" ? '&nbsp;&nbsp;<span style="color:' + (dl.state === "soon" ? "#BE2A30" : C.mute) + ';">' + esc(dl.text) + "</span>" : "");
