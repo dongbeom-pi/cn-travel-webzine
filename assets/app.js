@@ -68,7 +68,7 @@
     if (!btn) return;
     if (!btn._html) btn._html = btn.innerHTML;
     btn.classList.add("is-done");
-    btn.innerHTML = btn.id !== "modalShare" ? "✓ 복사했어요" : '<span aria-hidden="true" style="font-size:20px;font-weight:800">✓</span>';
+    btn.innerHTML = btn.id !== "modalShare" ? "✓ 복사했어요" : "✓ 복사";
     clearTimeout(btn._t); btn._t = setTimeout(function () { btn.classList.remove("is-done"); btn.innerHTML = btn._html; }, 2000);
   }
   function share(title, text, url, target, btn) {
