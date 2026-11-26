@@ -92,19 +92,17 @@ function detail(raw, alt) {
     return { html: t ? t.split(/\n+/).map((l) => `<p>${esc(l)}</p>`).join("") : "", text: t, images: [] };
   }
   const html = [], text = [], images = [];
-  // 화면과 같은 순서: 사진 먼저, 글은 아래
-  const pics = d.blocks.filter((b) => b.t === "img" || b.t === "img2");
-  const rest = d.blocks.filter((b) => b.t !== "img" && b.t !== "img2");
-  for (const b of pics) {
-    for (const u of [].concat(b.src || [])) {
-      const src = imgUrl(u, 1200); if (!src || /^upload:/.test(u)) continue;
-      images.push(src);
-      html.push(`<figure><img src="${esc(src)}" alt="${esc(b.cap || alt)}" loading="lazy" decoding="async">${b.cap ? `<figcaption>${esc(b.cap)}</figcaption>` : ""}</figure>`);
-      if (b.cap) text.push(b.cap);
+  // 화면과 같은 순서: 쓴 순서 그대로
+  for (const b of d.blocks) {
+    if (b.t === "img" || b.t === "img2") {
+      for (const u of [].concat(b.src || [])) {
+        const src = imgUrl(u, 1200); if (!src || /^upload:/.test(u)) continue;
+        images.push(src);
+        html.push(`<figure><img src="${esc(src)}" alt="${esc(b.cap || alt)}" loading="lazy" decoding="async">${b.cap ? `<figcaption>${esc(b.cap)}</figcaption>` : ""}</figure>`);
+        if (b.cap) text.push(b.cap);
+      }
     }
-  }
-  for (const b of rest) {
-    if (b.t === "p" || b.t === "note") { const t = strip(b.html).trim(); if (!t) continue; text.push(t); html.push(`<p>${esc(t).replace(/\n/g, "<br>")}</p>`); }
+    else if (b.t === "p" || b.t === "note") { const t = strip(b.html).trim(); if (!t) continue; text.push(t); html.push(`<p>${esc(t).replace(/\n/g, "<br>")}</p>`); }
     else if (b.t === "h") { if (!b.text) continue; text.push(b.text); html.push(`<h3>${esc(b.text)}</h3>`); }
     else if (b.t === "list") { const it = (b.items || []).map(strip).map((x) => x.trim()).filter(Boolean); if (!it.length) continue; text.push(it.join(" · ")); html.push(`<ul>${it.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`); }
     else if (b.t === "btn") { const h = linkOf(b.url); if (b.label && h) html.push(`<p><a href="${esc(h)}">${esc(b.label)}</a></p>`); }

@@ -63,7 +63,7 @@
     var picInput = el("input"); picInput.type = "file"; picInput.accept = "image/*"; picInput.multiple = true; picInput.setAttribute("aria-label", "사진 넣기");
     picBtn.appendChild(picInput); bar.appendChild(picBtn);
     bar.appendChild(btn("re-tool", "지우기", "꾸밈 지우기", clearFormat));
-    var hint = el("span", "re-bar__hint", "글자를 고른 뒤 꾸미기를 눌러요 · 사진은 상세 화면에서 글 위에 모아서 보여요");
+    var hint = el("span", "re-bar__hint", "글자를 고른 뒤 꾸미기를 눌러요 · 상세 화면에도 쓴 순서 그대로 보여요");
     bar.appendChild(hint);
     head.appendChild(bar);
 
@@ -545,7 +545,7 @@
     function refresh() {
       doc.classList.toggle("is-empty", isEmpty() && doc.childNodes.length <= 1);
       count.textContent = "본문 사진 " + imageCount() + " / " + maxImages + "장";
-      if (!prev.hidden) W.renderDetail(prev, get({ preview: true }).doc, { imagesFirst: true });
+      if (!prev.hidden) W.renderDetail(prev, get({ preview: true }).doc);
     }
 
     set("");
